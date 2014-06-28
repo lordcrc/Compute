@@ -1,0 +1,14 @@
+############
+# Delphi
+############
+__history
+*.dcu
+*.~*~
+*.local
+*.identcache
+*.drc
+*.map
+*.exe
+*.dll
+*.tds
+*.rsm
