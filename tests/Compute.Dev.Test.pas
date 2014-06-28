@@ -1,0 +1,83 @@
+unit Compute.Dev.Test;
+
+interface
+
+procedure RunTests;
+
+implementation
+
+uses
+  System.SysUtils,
+  Compute.ExprTrees,
+  Compute.Statements,
+  Compute.Interpreter;
+
+procedure TestExprTree;
+var
+  i, w, phi: Expr.Variable;
+  A: Expr.Func1;
+  f: Expr.Func2;
+  bias: Expr.ArrayVariable;
+  e: Expr;
+begin
+  i := Variable('i');
+  w := Variable('w');
+  phi := Variable('phi');
+
+  bias := ArrayVariable('bias', 5);
+
+  A := Func1('A');
+  f := Func2('f');
+
+  e := A(pi * w + phi) * f(w, phi) + 10 * -bias[i];
+
+  PrintExpr(e);
+end;
+
+procedure BasicMandelTest;
+var
+  mandel: Prog;
+  cx, cy: Expr.Variable;
+  x, y: Expr.Variable;
+  nx, ny: Expr.Variable;
+  i, max_i: Expr.Variable;
+begin
+  cx := Variable('cx');
+  cy := Variable('cy');
+
+  x := Variable('x');
+  y := Variable('y');
+
+  nx := Variable('nx');
+  ny := Variable('ny');
+
+  i := Variable('i');
+  max_i := Variable('max_i');
+
+  mandel :=
+    assign_(cx, -0.7435669).
+    assign_(cy,  0.1314023).
+    assign_(x, 0).
+    assign_(y, 0).
+    assign_(i, 0).
+    assign_(max_i, 1000000).
+    while_((x*x + y*y < 2*2) and (i < max_i)).do_.
+    begin_.
+      assign_(nx, x*x - y*y + cx).
+      assign_(ny, 2*x*y + cy).
+      assign_(x, nx).
+      assign_(y, ny).
+      inc_(i).
+    end_;
+
+  ExecProg(mandel);
+end;
+
+procedure RunTests;
+begin
+  //TestExprTree;
+
+  BasicMandelTest;
+end;
+
+end.
