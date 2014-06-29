@@ -10,7 +10,13 @@ uses
   Compute.ExprTrees in '..\src\Compute.ExprTrees.pas',
   Compute.Interpreter in '..\src\Compute.Interpreter.pas',
   Compute.Statements in '..\src\Compute.Statements.pas',
-  Compute.Dev.Test in 'Compute.Dev.Test.pas';
+  Compute.Dev.Test in 'Compute.Dev.Test.pas',
+  cl in '..\src\OpenCL\cl.pas',
+  cl_ext in '..\src\OpenCL\cl_ext.pas',
+  cl_platform in '..\src\OpenCL\cl_platform.pas',
+  Compute.Functions in '..\src\Compute.Functions.pas',
+  Compute.OpenCL in '..\src\Compute.OpenCL.pas',
+  Compute.OpenCL.Detail in '..\src\Compute.OpenCL.Detail.pas';
 
 begin
   try

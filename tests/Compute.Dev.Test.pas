@@ -10,7 +10,9 @@ uses
   System.SysUtils,
   Compute.ExprTrees,
   Compute.Statements,
-  Compute.Interpreter;
+  Compute.Functions,
+  Compute.Interpreter,
+  Compute.OpenCL;
 
 procedure TestExprTree;
 var
@@ -26,8 +28,8 @@ begin
 
   bias := ArrayVariable('bias', 5);
 
-  A := Func1('A');
-  f := Func2('f');
+  A := Func1('A', Func.Sqr(_1));
+  f := Func2('f', Func.Sin(_1 * 3.14 + _2));
 
   e := A(pi * w + phi) * f(w, phi) + 10 * -bias[i];
 
@@ -73,11 +75,34 @@ begin
   ExecProg(mandel);
 end;
 
+procedure BasicCLTest;
+var
+  logProc: TLogProc;
+  i: integer;
+  platforms: CLPlatforms;
+  plat: CLPlatform;
+begin
+  logProc :=
+    procedure(const Msg: string)
+    begin
+      WriteLn(Msg);
+    end;
+
+  platforms := CLPlatforms.Create(logProc);
+
+  for i := 0 to platforms.Count-1 do
+  begin
+    plat := platforms[i];
+  end;
+end;
+
 procedure RunTests;
 begin
   //TestExprTree;
 
-  BasicMandelTest;
+  //BasicMandelTest;
+
+  BasicCLTest;
 end;
 
 end.

@@ -3,7 +3,10 @@ unit Compute.Common;
 interface
 
 uses
-  Generics.Collections;
+  System.SysUtils,
+  Generics.Defaults,
+  Generics.Collections,
+  cl_platform;
 
 type
   IList<T> = interface
@@ -62,10 +65,60 @@ type
     destructor Destroy; override;
   end;
 
+  IDictionary<K, V> = interface
+    function GetCount: UInt32;
+    function GetItem(const Key: K): V;
+    procedure SetItem(const Key: K; const Value: V);
+    function GetEmpty: Boolean;
+    function GetContains(const Key: K): Boolean;
+
+    procedure Clear;
+    function Remove(const Key: K): Boolean;
+
+    property Empty: Boolean read GetEmpty;
+    property Count: UInt32 read GetCount;
+    property Item[const Key: K]: V read GetItem write SetItem; default;
+    property Contains[const Key: K]: Boolean read GetContains;
+  end;
+
+  TDictionaryImpl<K, V> = class(TInterfacedObject, IDictionary<K, V>)
+  private
+    type
+      TDict = Generics.Collections.TDictionary<K, V>;
+  private
+    FDict: TDict;
+  public
+    constructor Create(Comparer: Generics.Defaults.IEqualityComparer<K> = nil);
+    destructor Destroy; override;
+
+    function GetCount: UInt32;
+    function GetItem(const Key: K): V;
+    procedure SetItem(const Key: K; const Value: V);
+    function GetEmpty: Boolean;
+    function GetContains(const Key: K): Boolean;
+
+    procedure Clear;
+    function Remove(const Key: K): Boolean;
+  end;
+
+
+  // OpenCL
+
+  TCLStatus = TCL_int;
+
+  ECLException = class(Exception)
+  strict private
+    FStatus: TCLStatus;
+  public
+    constructor Create(const Status: TCLStatus);
+    property Status: TCLStatus read FStatus;
+  end;
+
+
 implementation
 
 uses
-  System.RTLConsts;
+  System.RTLConsts, cl;
 
 { TListImpl<T> }
 
@@ -149,5 +202,73 @@ procedure TStackImpl<T>.Push(const Item: T);
 begin
   FList.Add(Item);
 end;
+
+{ TDictionaryImpl<K, V> }
+
+procedure TDictionaryImpl<K, V>.Clear;
+begin
+  FDict.Clear;
+end;
+
+constructor TDictionaryImpl<K, V>.Create(Comparer: Generics.Defaults.IEqualityComparer<K> = nil);
+begin
+  inherited Create;
+
+  FDict := TDict.Create(Comparer)
+end;
+
+destructor TDictionaryImpl<K, V>.Destroy;
+begin
+  FDict.Free;
+
+  inherited;
+end;
+
+function TDictionaryImpl<K, V>.GetContains(const Key: K): Boolean;
+begin
+  result := FDict.ContainsKey(Key);
+end;
+
+function TDictionaryImpl<K, V>.GetCount: UInt32;
+begin
+  result := FDict.Count;
+end;
+
+function TDictionaryImpl<K, V>.GetEmpty: Boolean;
+begin
+  result := FDict.Count = 0;
+end;
+
+function TDictionaryImpl<K, V>.GetItem(const Key: K): V;
+begin
+  if not FDict.TryGetValue(Key, result) then
+  begin
+    result := Default(V);
+    FDict.Add(Key, result);
+  end;
+end;
+
+function TDictionaryImpl<K, V>.Remove(const Key: K): Boolean;
+begin
+  result := FDict.ContainsKey(Key);
+  if result then
+    FDict.Remove(Key);
+end;
+
+procedure TDictionaryImpl<K, V>.SetItem(const Key: K; const Value: V);
+begin
+  FDict.AddOrSetValue(Key, Value);
+end;
+
+{ ECLException }
+
+constructor ECLException.Create(const Status: TCLStatus);
+var
+  msg: string;
+begin
+  msg := cl.StatusToStr(Status);
+  inherited Create(msg);
+end;
+
 
 end.
