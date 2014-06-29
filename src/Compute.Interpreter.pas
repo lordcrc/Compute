@@ -97,10 +97,47 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
 
     function GetConstants: TEnumerable<Expr.Constant>;
     function GetVariables: TEnumerable<Expr.Variable>;
     function GetArrayVariables: TEnumerable<Expr.ArrayVariable>;
+  end;
+
+  IFunctionCollector = interface
+    ['{1BD69C5F-A430-41AB-AD1E-0A5EF1D431EA}']
+    function GetFunctions: TEnumerable<Expr.NaryFunc>;
+
+    property Functions: TEnumerable<Expr.NaryFunc> read GetFunctions;
+  end;
+
+  TFunctionCollector = class(TInterfacedObject, IFunctionCollector, IStmtVisitor, IExprNodeVisitor)
+  private
+    type TFunctionsDictionary = TDictionary<string, Expr.NaryFunc>;
+  private
+    FFunctions: TFunctionsDictionary;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Visit(const Stmt: IAssignStmt); overload;
+    procedure Visit(const Stmt: IBeginStmt); overload;
+    procedure Visit(const Stmt: IEndStmt); overload;
+    procedure Visit(const Stmt: IIncStmt); overload;
+    procedure Visit(const Stmt: IWhileStmt); overload;
+    procedure Visit(const Stmt: IWhileDoStmt); overload;
+    procedure Visit(const Stmt: IBreakStmt); overload;
+    procedure Visit(const Stmt: IContinueStmt); overload;
+
+    procedure Visit(const Node: IConstantNode); overload;
+    procedure Visit(const Node: IVariableNode); overload;
+    procedure Visit(const Node: IArrayElementNode); overload;
+    procedure Visit(const Node: IUnaryOpNode); overload;
+    procedure Visit(const Node: IBinaryOpNode); overload;
+    procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
+
+    function GetFunctions: TEnumerable<Expr.NaryFunc>;
   end;
 
   IStmtCompiler = interface
@@ -159,6 +196,7 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
   end;
 
   IVariableExprVisitor = interface(IExprNodeVisitor)
@@ -186,6 +224,7 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
 
     function GetName: string;
     function GetIndex: double;
@@ -470,6 +509,107 @@ procedure TVariableCollector.Visit(const Stmt: IIncStmt);
 begin
   Stmt.Variable.Accept(Self);
   Stmt.Value.Accept(Self);
+end;
+
+procedure TVariableCollector.Visit(const Node: ILambdaParamNode);
+begin
+
+end;
+
+{ TFunctionCollector }
+
+constructor TFunctionCollector.Create;
+begin
+  inherited Create;
+
+  FFunctions := TFunctionsDictionary.Create;
+end;
+
+destructor TFunctionCollector.Destroy;
+begin
+  FFunctions.Free;
+
+  inherited;
+end;
+
+function TFunctionCollector.GetFunctions: TEnumerable<Expr.NaryFunc>;
+begin
+  result := FFunctions.Values;
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IIncStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IWhileStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IWhileDoStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IAssignStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IBeginStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IEndStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IBreakStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IUnaryOpNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IBinaryOpNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IFuncNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IArrayElementNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Stmt: IContinueStmt);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IConstantNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: IVariableNode);
+begin
+
+end;
+
+procedure TFunctionCollector.Visit(const Node: ILambdaParamNode);
+begin
+
 end;
 
 { TStmtCompiler }
@@ -778,6 +918,11 @@ begin
 
 end;
 
+procedure TStmtCompiler.Visit(const Node: ILambdaParamNode);
+begin
+
+end;
+
 { TVariableExprVisitor }
 
 constructor TVariableExprVisitor.Create(const ExprExec: IExprNodeVisitor);
@@ -800,6 +945,11 @@ end;
 function TVariableExprVisitor.GetName: string;
 begin
   result := FName;
+end;
+
+procedure TVariableExprVisitor.Visit(const Node: ILambdaParamNode);
+begin
+  RaiseSyntaxErrorException;
 end;
 
 procedure TVariableExprVisitor.Visit(const Node: IVariableNode);
@@ -1177,5 +1327,6 @@ procedure TVirtualMachineImpl.UnknownOp(const Instr: Instruction);
 begin
   raise ENotImplemented.Create('unknown op');
 end;
+
 
 end.

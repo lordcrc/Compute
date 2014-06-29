@@ -232,6 +232,7 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
   end;
 
 procedure PrintProg(const p: Prog);
@@ -396,6 +397,11 @@ begin
   Output('(');
   Node.ChildNode.Accept(Self);
   Output(')');
+end;
+
+procedure TStmtPrinter.Visit(const Node: ILambdaParamNode);
+begin
+  Output(Node.Data.Name);
 end;
 
 type

@@ -24,6 +24,8 @@ type
 
   IFuncNode = interface;
 
+  ILambdaParamNode = interface;
+
   IExprNodeVisitor = interface
     ['{BACAD5B1-B34A-4DA6-B87F-F7BE8D853F93}']
     procedure Visit(const Node: IConstantNode); overload;
@@ -32,6 +34,7 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
   end;
 
   IExprNodeTransformer = interface
@@ -42,6 +45,7 @@ type
     function Transform(const Node: IUnaryOpNode): IExprNode; overload;
     function Transform(const Node: IBinaryOpNode): IExprNode; overload;
     function Transform(const Node: IFuncNode): IExprNode; overload;
+    function Transform(const Node: ILambdaParamNode): IExprNode; overload;
   end;
 
   Expr = record
@@ -68,17 +72,17 @@ type
 
         class operator Negative(const Value: Expr.Variable): Expr;
 
+        class operator Add(const Value1, Value2: Expr.Variable): Expr;
         class operator Add(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator Add(const Value1: Expr.Variable; const Value2: double): Expr;
-        class operator Add(const Value1: Expr.Variable; const Value2: Expr.Variable): Expr;
 
+        class operator Multiply(const Value1, Value2: Expr.Variable): Expr;
         class operator Multiply(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator Multiply(const Value1: Expr.Variable; const Value2: double): Expr;
-        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.Variable): Expr;
 
+        class operator Subtract(const Value1, Value2: Expr.Variable): Expr;
         class operator Subtract(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator Subtract(const Value1: Expr.Variable; const Value2: double): Expr;
-        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.Variable): Expr;
 
         class operator Equal(const Value1, Value2: Expr.Variable): Expr;
         class operator Equal(const Value1: double; const Value2: Expr.Variable): Expr;
@@ -195,14 +199,17 @@ type
       NaryFunc = record
       strict private
         FName: string;
+        FBody: TArray<Expr>;
         FParamCount: integer;
         FParams: TArray<Expr>;
       private
-        class function Create(const Name: string; const Param: Expr): NaryFunc; overload; static;
-        class function Create(const Name: string; const Param1, Param2: Expr): NaryFunc; overload; static;
+        class function Create(const Name: string; const Body, Param: Expr): NaryFunc; overload; static;
+        class function Create(const Name: string; const Body, Param1, Param2: Expr): NaryFunc; overload; static;
+        function GetBody: Expr;
         function GetParam(const Index: integer): Expr;
       public
         property Name: string read FName;
+        property Body: Expr read GetBody;
         property ParamCount: integer read FParamCount;
         property Params[const Index: integer]: Expr read GetParam;
 
@@ -283,6 +290,107 @@ type
 
       Func1 = reference to function(const Param: Expr): NaryFunc;
       Func2 = reference to function(const Param1, Param2: Expr): NaryFunc;
+
+      LambdaParam = record
+      strict private
+        FName: string;
+      private
+        class function Create(const Name: string): LambdaParam; overload; static;
+      public
+        property Name: string read FName;
+
+        class operator Negative(const Value: Expr.LambdaParam): Expr;
+
+        class operator Add(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Add(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Add(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator Multiply(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator Subtract(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator Equal(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Equal(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator NotEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator LessThan(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator LessThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator GreaterThan(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+
+        class operator GreaterThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+      end;
   public
     procedure Accept(const Visitor: IExprNodeVisitor); overload;
     procedure Accept(const Transformer: IExprNodeTransformer); overload;
@@ -294,6 +402,7 @@ type
     class operator Implicit(const Value: Variable): Expr;
     class operator Implicit(const Value: ArrayElement): Expr;
     class operator Implicit(const Value: NaryFunc): Expr;
+    class operator Implicit(const Value: LambdaParam): Expr;
 
     class operator Negative(const Value: Expr): Expr;
 
@@ -366,6 +475,13 @@ type
     function GetData: Expr.NaryFunc;
 
     property Data: Expr.NaryFunc read GetData;
+  end;
+
+  ILambdaParamNode = interface(IExprNode)
+    ['{3B92D89A-3FFF-4737-B6B4-A8228FD6D79C}']
+    function GetData: Expr.LambdaParam;
+
+    property Data: Expr.LambdaParam read GetData;
   end;
 
 type
@@ -456,11 +572,25 @@ type
     function GetData: Expr.NaryFunc;
   end;
 
+  TLambdaParamNodeImpl = class(TExprNodeBase, ILambdaParamNode)
+  strict private
+    FData: Expr.LambdaParam;
+  protected
+    procedure DoAcceptVisitor(const Visitor: IExprNodeVisitor); override;
+    function DoAcceptTransformer(const Transformer: IExprNodeTransformer): IExprNode; override;
+  public
+    constructor Create(const Data: Expr.LambdaParam);
+
+    function GetData: Expr.LambdaParam;
+  end;
+
 function Constant(const Value: double): Expr.Constant;
 function Variable(const Name: string): Expr.Variable;
 function ArrayVariable(const Name: string; const Count: integer): Expr.ArrayVariable;
-function Func1(const Name: string): Expr.Func1;
-function Func2(const Name: string): Expr.Func2;
+function Func1(const Name: string; const FuncBody: Expr): Expr.Func1;
+function Func2(const Name: string; const FuncBody: Expr): Expr.Func2;
+function _1: Expr.LambdaParam;
+function _2: Expr.LambdaParam;
 
 procedure PrintExpr(const e: Expr);
 
@@ -484,22 +614,32 @@ begin
   result := Expr.ArrayVariable.Create(Name, Count);
 end;
 
-function Func1(const Name: string): Expr.Func1;
+function Func1(const Name: string; const FuncBody: Expr): Expr.Func1;
 begin
   result :=
     function(const Param: Expr): Expr.NaryFunc
     begin
-      result := Expr.NaryFunc.Create(Name, Param);
+      result := Expr.NaryFunc.Create(Name, FuncBody, Param);
     end;
 end;
 
-function Func2(const Name: string): Expr.Func2;
+function Func2(const Name: string; const FuncBody: Expr): Expr.Func2;
 begin
   result :=
     function(const Param1, Param2: Expr): Expr.NaryFunc
     begin
-      result := Expr.NaryFunc.Create(Name, Param1, Param2);
+      result := Expr.NaryFunc.Create(Name, FuncBody, Param1, Param2);
     end;
+end;
+
+function _1: Expr.LambdaParam;
+begin
+  result := Expr.LambdaParam.Create('_1');
+end;
+
+function _2: Expr.LambdaParam;
+begin
+  result := Expr.LambdaParam.Create('_2');
 end;
 
 type
@@ -513,6 +653,7 @@ type
     procedure Visit(const Node: IUnaryOpNode); overload;
     procedure Visit(const Node: IBinaryOpNode); overload;
     procedure Visit(const Node: IFuncNode); overload;
+    procedure Visit(const Node: ILambdaParamNode); overload;
   end;
 
 procedure PrintExpr(const e: Expr);
@@ -593,6 +734,11 @@ begin
   end;
   Node.ChildNode2.Accept(Self);
   Output(')');
+end;
+
+procedure TExprPrinter.Visit(const Node: ILambdaParamNode);
+begin
+  Output(Node.Data.Name);
 end;
 
 { Expr.Constant }
@@ -1124,17 +1270,21 @@ begin
   result := Expr(Value1) + Expr(Value2);
 end;
 
-class function Expr.NaryFunc.Create(const Name: string; const Param: Expr): Expr.NaryFunc;
+class function Expr.NaryFunc.Create(const Name: string; const Body, Param: Expr): Expr.NaryFunc;
 begin
   result.FName := Name;
+  SetLength(result.FBody, 1);
+  result.FBody[0] := Body;
   result.FParamCount := 1;
   SetLength(result.FParams, result.FParamCount);
   result.FParams[0] := Param;
 end;
 
-class function Expr.NaryFunc.Create(const Name: string; const Param1, Param2: Expr): Expr.NaryFunc;
+class function Expr.NaryFunc.Create(const Name: string; const Body, Param1, Param2: Expr): Expr.NaryFunc;
 begin
   result.FName := Name;
+  SetLength(result.FBody, 1);
+  result.FBody[0] := Body;
   result.FParamCount := 2;
   SetLength(result.FParams, result.FParamCount);
   result.FParams[0] := Param1;
@@ -1181,6 +1331,11 @@ class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc;
   const Value2: Expr.ArrayElement): Expr;
 begin
   result := Expr(Value1) = Expr(Value2);
+end;
+
+function Expr.NaryFunc.GetBody: Expr;
+begin
+  result := FBody[0];
 end;
 
 function Expr.NaryFunc.GetParam(const Index: integer): Expr;
@@ -1487,6 +1642,504 @@ begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
+{ Expr.LambdaParam }
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class function Expr.LambdaParam.Create(const Name: string): LambdaParam;
+begin
+  result.FName := Name;
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(
+  const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(
+  const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(
+  const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(
+  const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(
+  const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Negative(const Value: Expr.LambdaParam): Expr;
+begin
+  result := -Expr(Value);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
+  const Value2: double): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.Variable;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1,
+  Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: double;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
+  const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.NaryFunc;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
+  const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.ArrayElement;
+  const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
+  const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
 { TExpr }
 
 procedure Expr.Accept(const Visitor: IExprNodeVisitor);
@@ -1567,6 +2220,11 @@ end;
 class operator Expr.Implicit(const Value: ArrayElement): Expr;
 begin
   result.FNode := TArrayElementNodeImpl.Create(Value);
+end;
+
+class operator Expr.Implicit(const Value: LambdaParam): Expr;
+begin
+  result.FNode := TLambdaParamNodeImpl.Create(Value);
 end;
 
 class operator Expr.Multiply(const Value1, Value2: Expr): Expr;
@@ -1783,7 +2441,29 @@ begin
   result := FData;
 end;
 
+{ TLambdaParamNodeImpl }
 
+constructor TLambdaParamNodeImpl.Create(const Data: Expr.LambdaParam);
+begin
+  inherited Create;
 
+  FData := Data;
+end;
+
+function TLambdaParamNodeImpl.DoAcceptTransformer(
+  const Transformer: IExprNodeTransformer): IExprNode;
+begin
+  result := Transformer.Transform(Self);
+end;
+
+procedure TLambdaParamNodeImpl.DoAcceptVisitor(const Visitor: IExprNodeVisitor);
+begin
+  Visitor.Visit(Self);
+end;
+
+function TLambdaParamNodeImpl.GetData: Expr.LambdaParam;
+begin
+  result := FData;
+end;
 
 end.
