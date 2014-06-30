@@ -101,6 +101,25 @@ type
     function Remove(const Key: K): Boolean;
   end;
 
+  TArrayEnumerator<T> = class(TEnumerator<T>)
+  strict private
+    FItems: TArray<T>;
+    FIndex: integer;
+  protected
+    function DoGetCurrent: T; override;
+    function DoMoveNext: Boolean; override;
+  public
+    constructor Create(const Items: TArray<T>);
+  end;
+
+  TArrayEnumerable<T> = class(TEnumerable<T>)
+  private
+    FItems: TArray<T>;
+  protected
+    function DoGetEnumerator: TEnumerator<T>; override;
+  public
+    constructor Create(const Items: TArray<T>);
+  end;
 
   // OpenCL
 
@@ -260,6 +279,42 @@ begin
   FDict.AddOrSetValue(Key, Value);
 end;
 
+{ TArrayEnumerator<T> }
+
+constructor TArrayEnumerator<T>.Create(const Items: TArray<T>);
+begin
+  inherited Create;
+
+  FItems := Items;
+  FIndex := -1;
+end;
+
+function TArrayEnumerator<T>.DoGetCurrent: T;
+begin
+  result := FItems[FIndex];
+end;
+
+function TArrayEnumerator<T>.DoMoveNext: Boolean;
+begin
+  result := (FIndex + 1) < Length(FItems);
+  if not result then
+    exit;
+  FIndex := FIndex + 1;
+end;
+
+{ TArrayEnumerable<T> }
+
+constructor TArrayEnumerable<T>.Create(const Items: TArray<T>);
+begin
+  inherited Create;
+  FItems := Items;
+end;
+
+function TArrayEnumerable<T>.DoGetEnumerator: TEnumerator<T>;
+begin
+  result := TArrayEnumerator<T>.Create(FItems);
+end;
+
 { ECLException }
 
 constructor ECLException.Create(const Status: TCLStatus);
@@ -269,6 +324,5 @@ begin
   msg := cl.StatusToStr(Status);
   inherited Create(msg);
 end;
-
 
 end.
