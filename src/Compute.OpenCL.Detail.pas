@@ -712,7 +712,10 @@ begin
   inherited Create(LogProc);
 
   if (cl.OCL_LibHandle = nil) then
+  begin
+    Log('Initializing OpenCL...');
     InitOpenCL();
+  end;
 
   numPlatforms := -1;
   Status := clGetPlatformIDs(0, nil, @numPlatforms);
