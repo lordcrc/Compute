@@ -207,7 +207,7 @@ end;
 
 function TArrayEnumerator<T>.DoMoveNext: Boolean;
 begin
-  result := (FIndex + 1) >= Length(FItems);
+  result := (FIndex + 1) < Length(FItems);
   if not result then
     exit;
   FIndex := FIndex + 1;
