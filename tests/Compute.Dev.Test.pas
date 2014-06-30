@@ -81,6 +81,7 @@ var
   i: integer;
   platforms: CLPlatforms;
   plat: CLPlatform;
+  dev: CLDevice;
 begin
   logProc :=
     procedure(const Msg: string)
@@ -88,11 +89,17 @@ begin
       WriteLn(Msg);
     end;
 
-  platforms := CLPlatforms.Create(logProc);
+//  platforms := CLPlatforms.Create(logProc);
+  platforms := CLPlatforms.Create(nil);
 
   for i := 0 to platforms.Count-1 do
   begin
     plat := platforms[i];
+
+    for dev in plat.AllDevices do
+    begin
+      WriteLn(Format('%s'#13#10'  usable: %s', [dev.Name, BoolToStr(dev.IsAvailable and dev.SupportsFP64, True)]));
+    end;
   end;
 end;
 
