@@ -12,4 +12,7 @@ __history
 *.dll
 *.tds
 *.rsm
+*.dsk
 *.~dsk
+*.dsm
+*.cbk
