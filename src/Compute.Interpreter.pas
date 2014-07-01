@@ -72,24 +72,24 @@ type
 
   IVariableCollector = interface
     ['{7C5B0B6A-8240-4880-B930-4B6BA1A60EA4}']
-    function GetConstants: TEnumerable<Expr.Constant>;
-    function GetVariables: TEnumerable<Expr.Variable>;
-    function GetArrayVariables: TEnumerable<Expr.ArrayVariable>;
+    function GetConstants: TArray<Expr.Constant>;
+    function GetVariables: TArray<Expr.Variable>;
+    function GetArrayVariables: TArray<Expr.ArrayVariable>;
 
-    property Constants: TEnumerable<Expr.Constant> read GetConstants;
-    property Variables: TEnumerable<Expr.Variable> read GetVariables;
-    property ArrayVariables: TEnumerable<Expr.ArrayVariable> read GetArrayVariables;
+    property Constants: TArray<Expr.Constant> read GetConstants;
+    property Variables: TArray<Expr.Variable> read GetVariables;
+    property ArrayVariables: TArray<Expr.ArrayVariable> read GetArrayVariables;
   end;
 
   TVariableCollector = class(TInterfacedObject, IVariableCollector, IStmtVisitor, IExprNodeVisitor)
   private
-    type TConstantsDictionary = TDictionary<double, Expr.Constant>;
-    type TVariablesDictionary = TDictionary<string, Expr.Variable>;
-    type TArrayVariablesDictionary = TDictionary<string, Expr.ArrayVariable>;
+    type TConstantsDictionary = IDictionary<double, Expr.Constant>;
+    type TVariablesDictionary = IDictionary<string, Expr.Variable>;
+    type TArrayVariablesDictionary = IDictionary<string, Expr.ArrayVariable>;
   private
-    FConstants: TConstantsDictionary;
-    FVariables: TVariablesDictionary;
-    FArrayVariables: TArrayVariablesDictionary;
+    FConstants: IDictionary<double, Expr.Constant>;
+    FVariables: IDictionary<string, Expr.Variable>;
+    FArrayVariables: IDictionary<string, Expr.ArrayVariable>;
 
     procedure InitializeSystemConstants;
   public
@@ -113,23 +113,21 @@ type
     procedure Visit(const Node: IFuncNode); overload;
     procedure Visit(const Node: ILambdaParamNode); overload;
 
-    function GetConstants: TEnumerable<Expr.Constant>;
-    function GetVariables: TEnumerable<Expr.Variable>;
-    function GetArrayVariables: TEnumerable<Expr.ArrayVariable>;
+    function GetConstants: TArray<Expr.Constant>;
+    function GetVariables: TArray<Expr.Variable>;
+    function GetArrayVariables: TArray<Expr.ArrayVariable>;
   end;
 
   IFunctionCollector = interface
     ['{1BD69C5F-A430-41AB-AD1E-0A5EF1D431EA}']
-    function GetFunctions: TEnumerable<Expr.NaryFunc>;
+    function GetFunctions: TArray<Expr.NaryFunc>;
 
-    property Functions: TEnumerable<Expr.NaryFunc> read GetFunctions;
+    property Functions: TArray<Expr.NaryFunc> read GetFunctions;
   end;
 
   TFunctionCollector = class(TInterfacedObject, IFunctionCollector, IStmtVisitor, IExprNodeVisitor)
   private
-    type TFunctionsDictionary = TDictionary<string, Expr.NaryFunc>;
-  private
-    FFunctions: TFunctionsDictionary;
+    FFunctions: IDictionary<string, Expr.NaryFunc>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -151,32 +149,28 @@ type
     procedure Visit(const Node: IFuncNode); overload;
     procedure Visit(const Node: ILambdaParamNode); overload;
 
-    function GetFunctions: TEnumerable<Expr.NaryFunc>;
+    function GetFunctions: TArray<Expr.NaryFunc>;
   end;
 
   IStmtCompiler = interface
     ['{91A81D2C-BC4A-4C1D-B270-61B2253F3614}']
     function GetCompiledBytecode: TBytecode;
     function GetMemory: TMemory;
-    function GetVariables: TEnumerable<MemVariable>;
+    function GetVariables: TArray<MemVariable>;
   end;
 
   TStmtCompiler = class(TInterfacedObject, IStmtCompiler, IStmtVisitor, IExprNodeVisitor)
   private
-    type TConstantDictionary = TDictionary<double, MemConstant>;
-    type TVariableDictionary = TDictionary<string, MemVariable>;
-    type TLabelDictionary = TDictionary<integer, JumpLabel>;
-  private
     FMemory: TMemory;
-    FConstants: TConstantDictionary;
-    FVariables: TVariableDictionary;
-    FArrayVariables: TVariableDictionary;
+    FConstants: IDictionary<double, MemConstant>;
+    FVariables: IDictionary<string, MemVariable>;
+    FArrayVariables: IDictionary<string, MemVariable>;
     FStmtBlocks: TScopeBlockStack;
     FLoopBlocks: TScopeBlockStack;
-    FLabels: TLabelDictionary;
+    FLabels: IDictionary<integer, JumpLabel>;
     FBytecode: TBytecode;
 
-    procedure InitializeMemory(const Constants: TEnumerable<Expr.Constant>; const Variables: TEnumerable<Expr.Variable>; const ArrayVariables: TEnumerable<Expr.ArrayVariable>);
+    procedure InitializeMemory(const Constants: TArray<Expr.Constant>; const Variables: TArray<Expr.Variable>; const ArrayVariables: TArray<Expr.ArrayVariable>);
     function AllocConst(const Value: double): MemConstant;
     function AllocVar(const Name: string): MemVariable;
     function AllocArray(const Name: string; const Count: integer): MemVariable;
@@ -188,12 +182,12 @@ type
     procedure ExitStmtBlock;
     procedure FixLabels;
   public
-    constructor Create(const Constants: TEnumerable<Expr.Constant>; const Variables: TEnumerable<Expr.Variable>; const ArrayVariables: TEnumerable<Expr.ArrayVariable>);
+    constructor Create(const Constants: TArray<Expr.Constant>; const Variables: TArray<Expr.Variable>; const ArrayVariables: TArray<Expr.ArrayVariable>);
     destructor Destroy; override;
 
     function GetCompiledBytecode: TBytecode;
     function GetMemory: TMemory;
-    function GetVariables: TEnumerable<MemVariable>;
+    function GetVariables: TArray<MemVariable>;
 
     procedure Visit(const Stmt: IAssignStmt); overload;
     procedure Visit(const Stmt: IBeginStmt); overload;
@@ -365,7 +359,7 @@ begin
   mem := comp.GetMemory;
   bytecode := comp.GetCompiledBytecode;
 
-  vars := comp.GetVariables.ToArray();
+  vars := comp.GetVariables;
   WriteLn('Bytecode:');
   PrintBytecode(bytecode, vars);
   WriteLn;
@@ -407,33 +401,29 @@ constructor TVariableCollector.Create;
 begin
   inherited Create;
 
-  FConstants := TConstantsDictionary.Create;
-  FVariables := TVariablesDictionary.Create;
-  FArrayVariables := TArrayVariablesDictionary.Create;
+  FConstants := TDictionaryImpl<double, Expr.Constant>.Create;
+  FVariables := TDictionaryImpl<string, Expr.Variable>.Create;
+  FArrayVariables := TDictionaryImpl<string, Expr.ArrayVariable>.Create;
 
   InitializeSystemConstants;
 end;
 
 destructor TVariableCollector.Destroy;
 begin
-  FConstants.Free;
-  FVariables.Free;
-  FArrayVariables.Free;
-
   inherited;
 end;
 
-function TVariableCollector.GetArrayVariables: TEnumerable<Expr.ArrayVariable>;
+function TVariableCollector.GetArrayVariables: TArray<Expr.ArrayVariable>;
 begin
   result := FArrayVariables.Values;
 end;
 
-function TVariableCollector.GetConstants: TEnumerable<Expr.Constant>;
+function TVariableCollector.GetConstants: TArray<Expr.Constant>;
 begin
   result := FConstants.Values;
 end;
 
-function TVariableCollector.GetVariables: TEnumerable<Expr.Variable>;
+function TVariableCollector.GetVariables: TArray<Expr.Variable>;
 begin
   result := FVariables.Values;
 end;
@@ -443,7 +433,7 @@ var
   c: Expr.Constant;
 begin
   c := Constant(1.0);
-  FConstants.AddOrSetValue(c.Value, c);
+  FConstants[c.Value] := c;
 end;
 
 procedure TVariableCollector.Visit(const Node: IBinaryOpNode);
@@ -467,12 +457,12 @@ end;
 
 procedure TVariableCollector.Visit(const Node: IConstantNode);
 begin
-  FConstants.AddOrSetValue(Node.Data.Value, Node.Data);
+  FConstants[Node.Data.Value] := Node.Data;
 end;
 
 procedure TVariableCollector.Visit(const Node: IVariableNode);
 begin
-  FVariables.AddOrSetValue(Node.Data.Name, Node.Data);
+  FVariables[Node.Data.Name] := Node.Data;
 end;
 
 procedure TVariableCollector.Visit(const Node: IArrayElementNode);
@@ -480,7 +470,7 @@ var
   av: Expr.ArrayVariable;
 begin
   av := ArrayVariable(Node.Data.Name, Node.Data.Count);
-  FArrayVariables.AddOrSetValue(Node.Data.Name, av);
+  FArrayVariables[Node.Data.Name] := av;
 end;
 
 procedure TVariableCollector.Visit(const Stmt: IAssignStmt);
@@ -536,17 +526,15 @@ constructor TFunctionCollector.Create;
 begin
   inherited Create;
 
-  FFunctions := TFunctionsDictionary.Create;
+  FFunctions := TDictionaryImpl<string, Expr.NaryFunc>.Create;
 end;
 
 destructor TFunctionCollector.Destroy;
 begin
-  FFunctions.Free;
-
   inherited;
 end;
 
-function TFunctionCollector.GetFunctions: TEnumerable<Expr.NaryFunc>;
+function TFunctionCollector.GetFunctions: TArray<Expr.NaryFunc>;
 begin
   result := FFunctions.Values;
 end;
@@ -655,7 +643,7 @@ var
 begin
   lb.Id := -1 * (FLabels.Count + 1); // labels have negative id to separate them more easily from mem index and actual ip's
   lb.InstructionPointer := -1;
-  FLabels.Add(lb.Id, lb);
+  FLabels[lb.Id] := lb;
   result := lb.Id;
 end;
 
@@ -669,15 +657,16 @@ begin
   result.MemIdx := i;
 end;
 
-constructor TStmtCompiler.Create(const Constants: TEnumerable<Expr.Constant>;
-  const Variables: TEnumerable<Expr.Variable>; const ArrayVariables: TEnumerable<Expr.ArrayVariable>);
+constructor TStmtCompiler.Create(const Constants: TArray<Expr.Constant>;
+  const Variables: TArray<Expr.Variable>; const ArrayVariables: TArray<Expr.ArrayVariable>);
 begin
   inherited Create;
 
-  FConstants := TConstantDictionary.Create;
-  FVariables := TVariableDictionary.Create;
-  FArrayVariables := TVariableDictionary.Create;
-  FLabels := TLabelDictionary.Create;
+  FConstants := TDictionaryImpl<double, MemConstant>.Create;
+  FVariables := TDictionaryImpl<string, MemVariable>.Create;
+  FArrayVariables := TDictionaryImpl<string, MemVariable>.Create;
+  FLabels := TDictionaryImpl<integer, JumpLabel>.Create;
+
   FStmtBlocks := TStackImpl<StmtBlock>.Create;
   FLoopBlocks := TStackImpl<StmtBlock>.Create;
   FBytecode := TListImpl<Instruction>.Create;
@@ -687,11 +676,6 @@ end;
 
 destructor TStmtCompiler.Destroy;
 begin
-  FConstants.Free;
-  FVariables.Free;
-  FArrayVariables.Free;
-  FLabels.Free;
-
   inherited;
 end;
 
@@ -761,13 +745,13 @@ begin
   result := FMemory;
 end;
 
-function TStmtCompiler.GetVariables: TEnumerable<MemVariable>;
+function TStmtCompiler.GetVariables: TArray<MemVariable>;
 begin
   result := FVariables.Values;
 end;
 
-procedure TStmtCompiler.InitializeMemory(const Constants: TEnumerable<Expr.Constant>;
-  const Variables: TEnumerable<Expr.Variable>; const ArrayVariables: TEnumerable<Expr.ArrayVariable>);
+procedure TStmtCompiler.InitializeMemory(const Constants: TArray<Expr.Constant>;
+  const Variables: TArray<Expr.Variable>; const ArrayVariables: TArray<Expr.ArrayVariable>);
 var
   c: Expr.Constant;
   mc: MemConstant;
@@ -778,17 +762,17 @@ begin
   for c in Constants do
   begin
     mc := AllocConst(c.Value);
-    FConstants.Add(mc.Value, mc);
+    FConstants[mc.Value] := mc;
   end;
   for v in Variables do
   begin
     mv := AllocVar(v.Name);
-    FVariables.Add(mv.Name, mv);
+    FVariables[mv.Name] := mv;
   end;
   for av in ArrayVariables do
   begin
     mv := AllocArray(av.Name, av.Count);
-    FArrayVariables.Add(mv.Name, mv);
+    FArrayVariables[mv.Name] := mv;
   end;
 end;
 

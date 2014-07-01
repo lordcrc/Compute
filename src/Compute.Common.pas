@@ -85,6 +85,8 @@ type
     procedure SetItem(const Key: K; const Value: V);
     function GetEmpty: Boolean;
     function GetContains(const Key: K): Boolean;
+    function GetKeys: TArray<K>;
+    function GetValues: TArray<V>;
 
     procedure Clear;
     function Remove(const Key: K): Boolean;
@@ -93,6 +95,8 @@ type
     property Count: UInt32 read GetCount;
     property Item[const Key: K]: V read GetItem write SetItem; default;
     property Contains[const Key: K]: Boolean read GetContains;
+    property Keys: TArray<K> read GetKeys;
+    property Values: TArray<V> read GetValues;
   end;
 
   TDictionaryImpl<K, V> = class(TInterfacedObject, IDictionary<K, V>)
@@ -110,6 +114,8 @@ type
     procedure SetItem(const Key: K; const Value: V);
     function GetEmpty: Boolean;
     function GetContains(const Key: K): Boolean;
+    function GetKeys: TArray<K>;
+    function GetValues: TArray<V>;
 
     procedure Clear;
     function Remove(const Key: K): Boolean;
@@ -279,6 +285,16 @@ begin
     result := Default(V);
     FDict.Add(Key, result);
   end;
+end;
+
+function TDictionaryImpl<K, V>.GetKeys: TArray<K>;
+begin
+  result := FDict.Keys.ToArray();
+end;
+
+function TDictionaryImpl<K, V>.GetValues: TArray<V>;
+begin
+  result := FDict.Values.ToArray();
 end;
 
 function TDictionaryImpl<K, V>.Remove(const Key: K): Boolean;
