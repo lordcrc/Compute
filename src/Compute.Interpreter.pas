@@ -1173,6 +1173,7 @@ var
   spi, bpi: integer;
 begin
   spi := NativeUInt(FStackPointer) - NativeUInt(FStackFirst);
+  bpi := NativeUInt(FBasePointer) - NativeUInt(FStackFirst);
   SetLength(FStack, System.Math.Max(16, Length(FStack)*2));
   FStackFirst := @FStack[0];
   FStackLast := @FStack[Length(FStack)-1];
