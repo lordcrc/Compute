@@ -50,6 +50,29 @@ begin
   PrintExpr(e);
 end;
 
+procedure BasicFuncTest;
+var
+  x, y, w, phi: Expr.Variable;
+  f: Expr.Func2;
+  p: Prog;
+begin
+  x := Variable('x');
+  y := Variable('y');
+  w := Variable('w');
+  phi := Variable('phi');
+
+  f := Func2('f', Func.Sin(_1 * 3.14 + _2));
+
+  p :=
+    assign_(phi, 3.14 / 4).
+    assign_(w, 0.1).
+    assign_(x, f(w, phi)).
+    assign_(w, 1.1).
+    assign_(y, f(w, phi));
+
+  ExecProg(p);
+end;
+
 procedure BasicMandelTest;
 var
   mandel: Prog;
@@ -81,6 +104,51 @@ begin
     begin_.
       assign_(nx, x*x - y*y + cx).
       assign_(ny, 2*x*y + cy).
+      assign_(x, nx).
+      assign_(y, ny).
+      inc_(i).
+    end_;
+
+  ExecProg(mandel);
+end;
+
+procedure FuncMandelTest;
+var
+  mandel: Prog;
+  cabs, cmul_r, cmul_i: Expr.Func2;
+  cx, cy: Expr.Variable;
+  x, y: Expr.Variable;
+  nx, ny: Expr.Variable;
+  i, max_i: Expr.Variable;
+begin
+
+  cabs := Func2('cabs', _1 * _1 + _2 * _2);
+  cmul_r := Func2('cmul_r', _1 * _1 - _2 * _2);
+  cmul_i := Func2('cmul_i', 2 * _1* _2);
+
+  cx := Variable('cx');
+  cy := Variable('cy');
+
+  x := Variable('x');
+  y := Variable('y');
+
+  nx := Variable('nx');
+  ny := Variable('ny');
+
+  i := Variable('i');
+  max_i := Variable('max_i');
+
+  mandel :=
+    assign_(cx, -0.7435669).
+    assign_(cy,  0.1314023).
+    assign_(x, 0).
+    assign_(y, 0).
+    assign_(i, 0).
+    assign_(max_i, 1000000).
+    while_((x*x + y*y < 2*2) and (i < max_i)).do_.
+    begin_.
+      assign_(nx, cmul_r(x, y) + cx).
+      assign_(ny, cmul_i(x, y) + cy).
       assign_(x, nx).
       assign_(y, ny).
       inc_(i).
@@ -121,9 +189,13 @@ procedure RunTests;
 begin
   //TestExprTree;
 
+  //BasicFuncTest;
+
   //BasicMandelTest;
 
-  BasicCLTest;
+  FuncMandelTest;
+
+  //BasicCLTest;
 end;
 
 end.
