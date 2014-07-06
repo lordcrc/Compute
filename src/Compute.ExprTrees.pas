@@ -419,19 +419,9 @@ type
     class operator Implicit(const Value: LambdaParam): Expr;
 
     class operator Negative(const Value: Expr): Expr;
-
-    class operator Add(const Value1: Variable; const Value2: Expr): Expr;
-    class operator Add(const Value1: Expr; const Value2: Variable): Expr;
     class operator Add(const Value1, Value2: Expr): Expr;
-
-    class operator Multiply(const Value1: Variable; const Value2: Expr): Expr;
-    class operator Multiply(const Value1: Expr; const Value2: Variable): Expr;
     class operator Multiply(const Value1, Value2: Expr): Expr;
-
-    class operator Subtract(const Value1: Variable; const Value2: Expr): Expr;
-    class operator Subtract(const Value1: Expr; const Value2: Variable): Expr;
     class operator Subtract(const Value1, Value2: Expr): Expr;
-
     class operator Equal(const Value1, Value2: Expr): Expr;
     class operator NotEqual(const Value1, Value2: Expr): Expr;
     class operator LessThan(const Value1, Value2: Expr): Expr;
@@ -2191,16 +2181,6 @@ begin
   result.FNode := TBinaryOpNodeImpl.Create(boGreaterEq, Value1.FNode, Value2.FNode);
 end;
 
-class operator Expr.Add(const Value1: Expr.Variable; const Value2: Expr): Expr;
-begin
-  result := Expr(Value1) + Value2;
-end;
-
-class operator Expr.Add(const Value1: Expr; const Value2: Expr.Variable): Expr;
-begin
-  result := Value1 + Expr(Value2);
-end;
-
 class operator Expr.Implicit(const Value: Expr.Constant): Expr;
 begin
   result.FNode := TConstantNodeImpl.Create(Value);
@@ -2246,16 +2226,6 @@ begin
   result.FNode := TBinaryOpNodeImpl.Create(boMul, Value1.FNode, Value2.FNode);
 end;
 
-class operator Expr.Multiply(const Value1: Expr.Variable; const Value2: Expr): Expr;
-begin
-  result := Expr(Value1) * Value2;
-end;
-
-class operator Expr.Multiply(const Value1: Expr; const Value2: Expr.Variable): Expr;
-begin
-  result := Value1 * Expr(Value2);
-end;
-
 class operator Expr.Negative(const Value: Expr): Expr;
 begin
   result.FNode := TUnaryOpNodeImpl.Create(uoNegate, Value.FNode);
@@ -2264,16 +2234,6 @@ end;
 class operator Expr.NotEqual(const Value1, Value2: Expr): Expr;
 begin
   result.FNode := TBinaryOpNodeImpl.Create(boNotEq, Value1.FNode, Value2.FNode);
-end;
-
-class operator Expr.Subtract(const Value1: Expr.Variable; const Value2: Expr): Expr;
-begin
-  result := Expr(Value1) - Value2;
-end;
-
-class operator Expr.Subtract(const Value1: Expr; const Value2: Expr.Variable): Expr;
-begin
-  result := Value2 - Expr(Value2);
 end;
 
 class operator Expr.Subtract(const Value1, Value2: Expr): Expr;
