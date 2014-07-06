@@ -163,7 +163,13 @@ var
   i: integer;
   platforms: CLPlatforms;
   plat: CLPlatform;
+  devs: TArray<CLDevice>;
   dev: CLDevice;
+  ctx: CLContext;
+  source: string;
+  prog: CLProgram;
+  buildSuccess: boolean;
+  kernel: CLKernel;
 begin
   logProc :=
     procedure(const Msg: string)
@@ -171,8 +177,8 @@ begin
       WriteLn(Msg);
     end;
 
-//  platforms := CLPlatforms.Create(logProc);
-  platforms := CLPlatforms.Create(nil);
+  platforms := CLPlatforms.Create(logProc);
+//  platforms := CLPlatforms.Create(nil);
 
   for i := 0 to platforms.Count-1 do
   begin
@@ -183,6 +189,38 @@ begin
       WriteLn(Format('%s'#13#10'  usable: %s', [dev.Name, BoolToStr(dev.IsAvailable and dev.SupportsFP64, True)]));
     end;
   end;
+
+  plat := platforms[0];
+  devs := plat.Devices[DeviceTypeGPU];
+  ctx := plat.CreateContext(devs);
+  WriteLn('Context created');
+
+  source :=
+    '__kernel void vector_add(__global const double* src_a, ' +
+    '__global const double* src_b, ' +
+    '__global double* res, ' +
+    'const int num) ' +
+    '{ ' +
+    'const int idx = get_global_id(0); ' +
+    'if (idx < num) ' +
+    'res[idx] = src_a[idx] + src_b[idx]; ' +
+    '} ';
+
+  prog := ctx.CreateProgram(source);
+  WriteLn('Program created');
+
+  buildSuccess := prog.Build(devs);
+  if buildSuccess then
+    WriteLn('Program built')
+  else
+  begin
+    WriteLn('Error building program, build log:');
+    WriteLn(prog.BuildLog);
+  end;
+
+  kernel := prog.CreateKernel('vector_add');
+  WriteLn(Format('  Max workgroup size: %d', [kernel.MaxWorkgroupSize]));
+  WriteLn(Format('  Preferred workgroup size multiple: %d', [kernel.PreferredWorkgroupSizeMultiple]));
 end;
 
 procedure RunTests;
@@ -193,9 +231,9 @@ begin
 
   //BasicMandelTest;
 
-  FuncMandelTest;
+  //FuncMandelTest;
 
-  //BasicCLTest;
+  BasicCLTest;
 end;
 
 end.

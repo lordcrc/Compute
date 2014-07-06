@@ -27,6 +27,9 @@ type
 
   TCLPlatformID = PCL_platform_id;
   TCLDeviceID = PCL_device_id;
+  TCLContextHandle = PCL_context;
+  TCLProgramHandle = PCL_program;
+  TCLKernelHandle = PCL_kernel;
 
   TLoggingObject = class(TInterfacedObject)
   strict private
@@ -193,6 +196,9 @@ type
 
     function GetDevices(const DeviceType: TCL_device_type): TEnumerable<ICLDevice>;
 
+    function GetPlatformID: TCLPlatformID;
+
+    property PlatformID: TCLPlatformID read GetPlatformID;
     property Extensions: string read GetExtensions;
     property Name: string read GetName;
     property Profile: string read GetProfile;
@@ -217,6 +223,7 @@ type
   public
     constructor Create(const LogProc: TLogProc; const PlatformID: TCLPlatformID);
 
+    function GetPlatformID: TCLPlatformID;
     function GetExtensions: string;
     function GetName: string;
     function GetProfile: string;
@@ -244,13 +251,136 @@ type
     function GetCLPlatform(const Index: integer): ICLPlatform;
   end;
 
+  TCLContextProperty = packed record
+    name: PCL_context_properties;
+    value: PCL_context_properties;
+
+    class function Terminator: TCLContextProperty; static;
+    class function Platform(const Value: TCLPlatformID): TCLContextProperty; static;
+  end;
+
+  ICLContext = interface(ICLBase)
+    ['{9D8B3AD4-637A-4A3F-B05A-E64E57C5E893}']
+    function GetHandle: TCLContextHandle;
+    function GetDevices: TArray<ICLDevice>;
+    function GetProperties: TArray<TCLContextProperty>;
+
+    property Handle: TCLContextHandle read GetHandle;
+    property Devices: TArray<ICLDevice> read GetDevices;
+    property Properties: TArray<TCLContextProperty> read GetProperties;
+  end;
+
+  TCLContextImpl = class(TCLBaseImpl, ICLContext)
+  strict private
+    FContext: TCLContextHandle;
+    FDevices: TArray<ICLDevice>;
+    FProperties: TArray<TCLContextProperty>;
+  public
+    constructor Create(const LogProc: TLogProc; const Properties: TArray<TCLContextProperty>; const Devices: TArray<ICLDevice>);
+    destructor Destroy; override;
+
+    function GetHandle: TCLContextHandle;
+    function GetDevices: TArray<ICLDevice>;
+    function GetProperties: TArray<TCLContextProperty>;
+  end;
+
+  TCLBinaries = TArray<TBytes>;
+
+  ICLProgram = interface(ICLBase)
+    function Build(const Devices: TArray<ICLDevice>; const Defines: array of string; const Options: string = ''): boolean;
+
+    function GetBinaries: TCLBinaries;
+    function GetBuildLog: string;
+
+    function GetHandle: TCLProgramHandle;
+    function GetDevices: TArray<ICLDevice>;
+
+    property Handle: TCLProgramHandle read GetHandle;
+    property Devices: TArray<ICLDevice> read GetDevices;
+  end;
+
+  TCLProgramImpl = class(TCLBaseImpl, ICLProgram)
+  strict private
+    FProgram: TCLProgramHandle;
+    FDevices: TArray<ICLDevice>;
+
+    function GetProgramBuildInfoString(const Device: ICLDevice; const ProgramBuildInfo: TCL_program_build_info): string;
+    function GetProgramBuildInfo<T>(const Device: ICLDevice; const ProgramBuildInfo: TCL_program_build_info): T;
+  private
+    function Build(const Devices: TArray<ICLDevice>;
+      const Defines: array of string; const Options: string): boolean;
+  public
+    constructor Create(const LogProc: TLogProc; const Context: ICLContext; const Source: string); overload;
+    constructor Create(const LogProc: TLogProc; const Context: ICLContext; const Devices: TArray<ICLDevice>; const Binaries: TCLBinaries); overload;
+    destructor Destroy; override;
+
+    function GetBinaries: TCLBinaries;
+    function GetBuildLog: string;
+
+    function GetHandle: TCLProgramHandle;
+    function GetDevices: TArray<ICLDevice>;
+  end;
+
+  ICLKernel = interface(ICLBase)
+    function GetName: string;
+    function GetArgumentCount: UInt32;
+    function GetMaxWorkgroupSize: UInt32;
+    function GetPreferredWorkgroupSizeMultiple: UInt32;
+    function GetMaxWorkgroupSizeDevice(const Device: ICLDevice): UInt32;
+    function GetPreferredWorkgroupSizeMultipleDevice(const Device: ICLDevice): UInt32;
+    function GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt64;
+
+    property Name: string read GetName;
+    property ArgumentCount: UInt32 read GetArgumentCount;
+
+    property MaxWorkgroupSize: UInt32 read GetMaxWorkgroupSize;
+    property PreferredWorkgroupSizeMultiple: UInt32 read GetPreferredWorkgroupSizeMultiple;
+    property MaxWorkgroupSizeDevice[const Device: ICLDevice]: UInt32 read GetMaxWorkgroupSizeDevice;
+    property PreferredWorkgroupSizeMultipleDevice[const Device: ICLDevice]: UInt32 read GetPreferredWorkgroupSizeMultipleDevice;
+    property PrivateMemorySize[const Device: ICLDevice]: UInt64 read GetPrivateMemorySizeDevice;
+  end;
+
+  TCLKernelImpl = class(TCLBaseImpl, ICLKernel)
+  strict private
+    FKernel: TCLKernelHandle;
+    FProg: ICLProgram;
+    FName: string;
+    FArgCount: TCL_uint;
+
+    function GetKernelInfo<T>(const KernelInfo: TCL_kernel_info): T;
+    function GetKernelWorkGroupInfo<T>(const Device: ICLDevice; const KernelWorkGroupInfo: TCL_kernel_work_group_info): T;
+  public
+    constructor Create(const LogProc: TLogProc; const Prog: ICLProgram; const Name: string);
+    destructor Destroy; override;
+
+    function GetName: string;
+    function GetArgumentCount: UInt32;
+    function GetMaxWorkgroupSize: UInt32;
+    function GetPreferredWorkgroupSizeMultiple: UInt32;
+    function GetMaxWorkgroupSizeDevice(const Device: ICLDevice): UInt32;
+    function GetPreferredWorkgroupSizeMultipleDevice(const Device: ICLDevice): UInt32;
+    function GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt64;
+  end;
+
 procedure RaiseCLException(const Status: TCLStatus);
 
 implementation
 
+uses
+  System.AnsiStrings, System.Math;
+
 procedure RaiseCLException(const Status: TCLStatus);
 begin
   raise ECLException.Create(Status);
+end;
+
+function GetDeviceIDs(const Devices: TArray<ICLDevice>): TArray<TCLDeviceID>;
+var
+  i: integer;
+begin
+  SetLength(result, Length(devices));
+  for i := 0 to High(Devices) do
+    result[i] := Devices[i].DeviceID;
 end;
 
 function DeviceTypeToStr(const DeviceType: TCL_device_type): string;
@@ -297,6 +427,68 @@ begin
   result := Trim(result);
 end;
 
+function BuildStatusToStr(const BuildStatus: TCL_build_status): string;
+begin
+  case buildStatus of
+    CL_BUILD_NONE: result := 'Not built';
+    CL_BUILD_ERROR: result := 'Error';
+    CL_BUILD_SUCCESS: result := 'Success';
+    CL_BUILD_IN_PROGRESS: result := 'In progress';
+  else
+    result := 'Unknown build status';
+  end;
+end;
+
+function UnicodeToLocaleBytes(const s: string; const CodePage: cardinal): TBytes;
+var
+  rlen: integer;
+  usedDefaultChar: LongBool;
+begin
+  result := nil;
+  if (s = '') then
+    exit;
+
+  rlen := LocaleCharsFromUnicode(CodePage, 0, PChar(s), Length(s), nil, 0, nil, @usedDefaultChar);
+  if (rlen = 0) then
+    RaiseLastOSError;
+
+  SetLength(result, rlen);
+
+  if (usedDefaultChar) then
+    raise EConvertError.Create('Invalid characters in input');
+
+  rlen := LocaleCharsFromUnicode(CodePage, 0, PChar(s), Length(s), PAnsiChar(result), Length(result), nil, @usedDefaultChar);
+  if (rlen = 0) then
+    RaiseLastOSError;
+
+  if (usedDefaultChar) then
+    raise EConvertError.Create('Invalid characters in input');
+end;
+
+function UnicodeToASCIIBytes(const s: string): TBytes;
+begin
+  result := UnicodeToLocaleBytes(s, TEncoding.ASCII.CodePage);
+end;
+
+function GCD(a, b: UInt32): UInt32;
+begin
+  result := a;
+  while (b <> 0) do
+  begin
+    result := b;
+    b := a mod b;
+    a := result;
+  end;
+end;
+
+function MergePreferredSizeMultiple(const a, b: UInt32): UInt32;
+var
+  cf: UInt32;
+begin
+  cf := GCD(a, b);
+  result := (a * b) div cf;
+end;
+
 { TLoggingObject }
 
 constructor TLoggingObject.Create(const LogProc: TLogProc);
@@ -321,7 +513,7 @@ end;
 
 procedure TLoggingObject.Log(const Msg: string);
 begin
-  if Assigned(FLogProc) then
+  if not Assigned(FLogProc) then
     exit;
 
   FLogProc(Msg);
@@ -687,6 +879,11 @@ begin
   FDevices[CL_DEVICE_TYPE_ALL] := allDevices.ToArray();
 end;
 
+function TCLPlatformImpl.GetPlatformID: TCLPlatformID;
+begin
+  result := FPlatformID;
+end;
+
 function TCLPlatformImpl.GetPlatformInfoString(const PlatformInfo: TCL_platform_info): string;
 var
   size: TSize_t;
@@ -763,6 +960,335 @@ begin
   Log('Platform #%d details:', [Index]);
   result := TCLPlatformImpl.Create(LogProc, pid);
   FPlatforms[pid] := result;
+end;
+
+{ TCLContextProperty }
+
+class function TCLContextProperty.Platform(
+  const Value: TCLPlatformID): TCLContextProperty;
+begin
+  result.name := PCL_context_properties(CL_CONTEXT_PLATFORM);
+  result.value := PCL_context_properties(Value);
+end;
+
+class function TCLContextProperty.Terminator: TCLContextProperty;
+begin
+  result.name := PCL_context_properties(0);
+  result.value := PCL_context_properties(0);
+end;
+
+{ TCLContextImpl }
+
+procedure ContextNotificationCallback(const errinfo: PAnsiChar; const private_info: pointer; cb: TSize_t; user_data: pointer); stdcall;
+var
+  ctx: TCLContextImpl;
+  errorInfo: string;
+begin
+  errorInfo := string(System.AnsiStrings.StrPas(errinfo));
+
+  ctx := TCLContextImpl(user_data);
+  MonitorEnter(ctx);
+  try
+    ctx.Log(errorInfo);
+  finally
+    MonitorExit(ctx);
+  end;
+end;
+
+constructor TCLContextImpl.Create(const LogProc: TLogProc;
+  const Properties: TArray<TCLContextProperty>; const Devices: TArray<ICLDevice>);
+var
+  i: integer;
+  props: TArray<TCLContextProperty>;
+  devs: TArray<TCLDeviceID>;
+  errcode_ret: TCL_int;
+begin
+  inherited Create(LogProc);
+
+  FProperties := Properties;
+  FDevices := Devices;
+
+  props := Copy(Properties);
+  i := Length(Properties);
+  SetLength(props, i+1);
+  props[i] := TCLContextProperty.Terminator;
+
+  devs := GetDeviceIDs(Devices);
+
+  FContext := clCreateContext(@props[0].name, Length(devs), @devs[0], @ContextNotificationCallback, pointer(Self), @errcode_ret);
+
+  Status := errcode_ret;
+end;
+
+destructor TCLContextImpl.Destroy;
+begin
+  if (FContext <> nil) then
+    clReleaseContext(FContext);
+
+  inherited;
+end;
+
+function TCLContextImpl.GetDevices: TArray<ICLDevice>;
+begin
+  result := FDevices;
+end;
+
+function TCLContextImpl.GetHandle: TCLContextHandle;
+begin
+  result := FContext;
+end;
+
+function TCLContextImpl.GetProperties: TArray<TCLContextProperty>;
+begin
+  result := FProperties;
+end;
+
+{ TCLProgramImpl }
+
+function TCLProgramImpl.Build(const Devices: TArray<ICLDevice>;
+  const Defines: array of string; const Options: string): boolean;
+var
+  i: integer;
+  devs: TArray<TCLDeviceID>;
+  buildOptions: string;
+  opts: TBytes;
+  errcode_ret: TCL_int;
+begin
+  FDevices := Devices;
+  devs := GetDeviceIDs(Devices);
+
+  buildOptions := Options;
+
+  for i := 0 to High(Defines) do
+    buildOptions := buildOptions + '-D ' + Defines[i];
+
+  opts := UnicodeToASCIIBytes(buildOptions);
+
+  Log('Building program, options: "%s"', [buildOptions]);
+  errcode_ret := clBuildProgram(FProgram, Length(devs), @devs[0], PAnsiChar(opts), nil, nil);
+
+  result := (errcode_ret <> CL_INVALID_BINARY) and (errcode_ret <> CL_BUILD_PROGRAM_FAILURE);
+
+  if result then
+  begin
+    Status := errcode_ret;
+  end
+  else
+  begin
+    FStatus := errcode_ret; // don't throw
+  end;
+end;
+
+constructor TCLProgramImpl.Create(const LogProc: TLogProc;
+  const Context: ICLContext; const Source: string);
+var
+  errcode_ret: TCL_int;
+  src: TBytes;
+  len: TSize_t;
+begin
+  inherited Create(LogProc);
+
+  src := UnicodeToASCIIBytes(Source);
+  len := Length(src);
+
+  Log('Program from source');
+  FProgram := clCreateProgramWithSource(Context.Handle, 1, PPAnsiChar(@src), @len, @errcode_ret);
+
+  Status := errcode_ret;
+end;
+
+constructor TCLProgramImpl.Create(const LogProc: TLogProc;
+  const Context: ICLContext; const Devices: TArray<ICLDevice>; const Binaries: TCLBinaries);
+var
+  errcode_ret: TCL_int;
+begin
+  inherited Create(LogProc);
+
+  LogProc('Program from binaries');
+  raise ENotImplemented.Create('Create Binaries');
+end;
+
+destructor TCLProgramImpl.Destroy;
+begin
+  if (FProgram <> nil) then
+    clReleaseProgram(FProgram);
+
+  inherited;
+end;
+
+function TCLProgramImpl.GetBinaries: TCLBinaries;
+begin
+  raise ENotImplemented.Create('GetBinaries');
+end;
+
+function TCLProgramImpl.GetBuildLog: string;
+var
+  i: integer;
+  buildStatus: TCL_build_status;
+begin
+  for i := 0 to High(FDevices) do
+  begin
+    if (i > 0) then
+      result := result + #13#10;
+
+    result := result + 'Device #' + IntToStr(i) + ': ';
+    buildStatus := GetProgramBuildInfo<TCL_build_status>(FDevices[i], CL_PROGRAM_BUILD_STATUS);
+    result := result + BuildStatusToStr(buildStatus);
+    if (buildStatus = CL_BUILD_ERROR) then
+    begin
+      result := result + #13#10;
+      result := result + GetProgramBuildInfoString(FDevices[i], CL_PROGRAM_BUILD_LOG);
+    end;
+  end;
+end;
+
+function TCLProgramImpl.GetDevices: TArray<ICLDevice>;
+begin
+  result := FDevices;
+end;
+
+function TCLProgramImpl.GetHandle: TCLProgramHandle;
+begin
+  result := FProgram;
+end;
+
+function TCLProgramImpl.GetProgramBuildInfo<T>(const Device: ICLDevice;
+  const ProgramBuildInfo: TCL_program_build_info): T;
+var
+  value: T;
+  retSize: TSize_t;
+begin
+  value := Default(T);
+  retSize := 0;
+  Status := clGetProgramBuildInfo(FProgram, Device.DeviceID, ProgramBuildInfo, SizeOf(T), @value, @retSize);
+  if (retSize <> SizeOf(T)) then
+    raise Exception.Create('Error while getting program build info');
+  result := value;
+end;
+
+function TCLProgramImpl.GetProgramBuildInfoString(const Device: ICLDevice;
+  const ProgramBuildInfo: TCL_program_build_info): string;
+var
+  size: TSize_t;
+  data: TBytes;
+begin
+  Status := clGetProgramBuildInfo(FProgram, Device.DeviceID, ProgramBuildInfo, 0, nil, @size);
+  SetLength(data, size);
+
+  if (size <= 0) then
+    exit;
+
+  Status := clGetProgramBuildInfo(FProgram, Device.DeviceID, ProgramBuildInfo, size, data, @size);
+
+  // assume ASCII encoding, specs does not mention encoding at all...
+  result := Trim(TEncoding.ASCII.GetString(data));
+end;
+
+{ TCLKernelImpl }
+
+constructor TCLKernelImpl.Create(const LogProc: TLogProc;
+  const Prog: ICLProgram; const Name: string);
+var
+  errcode_ret: TCL_int;
+  kernelName: TBytes;
+begin
+  inherited Create(LogProc);
+
+  FProg := Prog;
+  FName := Name;
+  kernelName := UnicodeToASCIIBytes(Name);
+
+  Log('Kernel "%s" details:', [Name]);
+  FKernel := clCreateKernel(Prog.Handle, PAnsiChar(kernelName), @errcode_ret);
+  Status := errcode_ret;
+
+  FArgCount := GetKernelInfo<TCL_uint>(CL_KERNEL_NUM_ARGS);
+  Log('  Number of arguments: %d', [FArgCount]);
+end;
+
+destructor TCLKernelImpl.Destroy;
+begin
+  if (FKernel <> nil) then
+    clReleaseKernel(FKernel);
+
+  inherited;
+end;
+
+function TCLKernelImpl.GetArgumentCount: UInt32;
+begin
+  result := GetKernelInfo<TCL_uint>(CL_KERNEL_NUM_ARGS);
+end;
+
+function TCLKernelImpl.GetKernelInfo<T>(const KernelInfo: TCL_kernel_info): T;
+var
+  value: T;
+  retSize: TSize_t;
+begin
+  value := Default(T);
+  retSize := 0;
+  Status := clGetKernelInfo(FKernel, KernelInfo, SizeOf(T), @value, @retSize);
+  if (retSize <> SizeOf(T)) then
+    raise Exception.Create('Error while getting kernel info');
+  result := value;
+end;
+
+function TCLKernelImpl.GetKernelWorkGroupInfo<T>(const Device: ICLDevice;
+  const KernelWorkGroupInfo: TCL_kernel_work_group_info): T;
+var
+  value: T;
+  retSize: TSize_t;
+begin
+  value := Default(T);
+  retSize := 0;
+  Status := clGetKernelWorkGroupInfo(FKernel, Device.DeviceID, KernelWorkGroupInfo, SizeOf(T), @value, @retSize);
+  if (retSize <> SizeOf(T)) then
+    raise Exception.Create('Error while getting kernel work-group info');
+  result := value;
+end;
+
+function TCLKernelImpl.GetMaxWorkgroupSize: UInt32;
+var
+  dev: ICLDevice;
+begin
+  result := $ffffffff;
+  for dev in FProg.Devices do
+  begin
+    result := Min(result, GetMaxWorkgroupSizeDevice(dev));
+  end;
+end;
+
+function TCLKernelImpl.GetMaxWorkgroupSizeDevice(const Device: ICLDevice): UInt32;
+begin
+  result := GetKernelWorkGroupInfo<TSize_t>(Device, CL_KERNEL_WORK_GROUP_SIZE);
+end;
+
+function TCLKernelImpl.GetName: string;
+begin
+  result := FName;
+end;
+
+function TCLKernelImpl.GetPreferredWorkgroupSizeMultiple: UInt32;
+var
+  dev: ICLDevice;
+  md: UInt32;
+begin
+  result := 1;
+  for dev in FProg.Devices do
+  begin
+    md := GetPreferredWorkgroupSizeMultipleDevice(dev);
+    result := MergePreferredSizeMultiple(result, md);
+  end;
+end;
+
+function TCLKernelImpl.GetPreferredWorkgroupSizeMultipleDevice(
+  const Device: ICLDevice): UInt32;
+begin
+  result := GetKernelWorkGroupInfo<TSize_t>(Device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
+end;
+
+function TCLKernelImpl.GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt64;
+begin
+  result := GetKernelWorkGroupInfo<TCL_ulong>(Device, CL_KERNEL_PRIVATE_MEM_SIZE);
 end;
 
 end.

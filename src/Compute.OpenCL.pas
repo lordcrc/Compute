@@ -27,15 +27,17 @@ type
 //  TCLDeviceID = Compute.OpenCL.Detail.TCLDeviceID;
   TLogProc = Compute.OpenCL.Detail.TLogProc;
 
-  CLDeviceType = (dtCpu, dtGpu, dtAccelerator, dtDefault);
+  CLDeviceType = (DeviceTypeCPU, DeviceTypeGPU, DeviceTypeAccelerator, DeviceTypeDefault);
 
-  CLDeviceExecCapability = (ecKernel, ecNativeKernel);
+  CLDeviceExecCapability = (ExecKernel, ExecNativeKernel);
   CLDeviceExecCapabilities = set of CLDeviceExecCapability;
 
-  CLDeviceLocalMemType = (lmLocal, lmGlobal);
+  CLDeviceLocalMemType = (LocalMemTypeLocal, LocalMemTypeGlobal);
 
-  CLCommandQueueProperty = (qpOutOfOrderExec, qpProfiling);
+  CLCommandQueueProperty = (QueuePropertyOutOfOrderExec, QueuePropertyProfiling);
   CLCommandQueueProperties = set of CLCommandQueueProperty;
+
+  CLProgramBuildStatus = (BuildStatusNone, BuildStatusError, BuildStatusSuccess, BuildStatusInProgress);
 
   CLDevice = record
   strict private
@@ -67,6 +69,7 @@ type
     function GetDriverVersion: string;
   private
     class function Create(const d: Compute.OpenCL.Detail.ICLDevice): CLDevice; static;
+    property Device: Compute.OpenCL.Detail.ICLDevice read FDevice;
   public
     property Name: string read GetName;
     property IsAvailable: boolean read GetIsAvailable;
@@ -92,6 +95,50 @@ type
     property QueueProperties: CLCommandQueueProperties read GetQueueProperties;
     property Version: string read GetVersion;
     property DriverVersion: string read GetDriverVersion;
+  end;
+
+  CLKernel = record
+  strict private
+    FKernel: Compute.OpenCL.Detail.ICLKernel;
+
+    function GetArgumentCount: UInt32;
+    function GetMaxWorkgroupSize: UInt32;
+    function GetPreferredWorkgroupSizeMultiple: UInt32;
+  private
+    class function Create(const k: Compute.OpenCL.Detail.ICLKernel): CLKernel; static;
+    property Kernel: Compute.OpenCL.Detail.ICLKernel read FKernel;
+  public
+
+    property ArgumentCount: UInt32 read GetArgumentCount;
+    property MaxWorkgroupSize: UInt32 read GetMaxWorkgroupSize;
+    property PreferredWorkgroupSizeMultiple: UInt32 read GetPreferredWorkgroupSizeMultiple;
+  end;
+
+  CLProgram = record
+  strict private
+    FProgram: Compute.OpenCL.Detail.ICLProgram;
+
+    function GetBuildLog: string;
+  private
+    class function Create(const p: Compute.OpenCL.Detail.ICLProgram): CLProgram; static;
+    property Prog: Compute.OpenCL.Detail.ICLProgram read FProgram;
+  public
+    function Build(const Devices: TArray<CLDevice>; const Defines: array of string; const Options: string = ''): boolean; overload;
+    function Build(const Devices: TArray<CLDevice>; const Options: string = ''): boolean; overload;
+
+    function CreateKernel(const Name: string): CLKernel;
+
+    property BuildLog: string read GetBuildLog;
+  end;
+
+  CLContext = record
+  strict private
+    FContext: Compute.OpenCL.Detail.ICLContext;
+  private
+    class function Create(const c: Compute.OpenCL.Detail.ICLContext): CLContext; static;
+    property Context: Compute.OpenCL.Detail.ICLContext read FContext;
+  public
+    function CreateProgram(const Source: string): CLProgram;
   end;
 
   CLPlatform = record
@@ -124,19 +171,23 @@ type
     function GetVendor: string;
     function GetVersion: string;
 
-    function GetDevices(const DeviceType: CLDeviceType): TEnumerable<CLDevice>;
-    function GetAllDevices: TEnumerable<CLDevice>;
+    function DevicesToArray(const Devices: TEnumerable<Compute.OpenCL.Detail.ICLDevice>): TArray<CLDevice>;
+
+    function GetDevices(const DeviceType: CLDeviceType): TArray<CLDevice>;
+    function GetAllDevices: TArray<CLDevice>;
   private
     class function Create(const p: Compute.OpenCL.Detail.ICLPlatform): CLPlatform; static;
   public
+    function CreateContext(const Devices: TArray<CLDevice>): CLContext;
+
     property Extensions: string read GetExtensions;
     property Name: string read GetName;
     property Profile: string read GetProfile;
     property Vendor: string read GetVendor;
     property Version: string read GetVersion;
 
-    property Devices[const DeviceType: CLDeviceType]: TEnumerable<CLDevice> read GetDevices;
-    property AllDevices: TEnumerable<CLDevice> read GetAllDevices;
+    property Devices[const DeviceType: CLDeviceType]: TArray<CLDevice> read GetDevices;
+    property AllDevices: TArray<CLDevice> read GetAllDevices;
   end;
 
   CLPlatforms = record
@@ -155,9 +206,18 @@ type
 implementation
 
 const
-// CLDeviceType = (dtCpu, dtGpu, dtAccelerator, dtDefault);
+// CLDeviceType = (DeviceTypeCPU, DeviceTypeGPU, DeviceTypeAccelerator, DeviceTypeDefault);
   DeviceTypeMap: array[CLDeviceType] of TCL_device_type = (
     CL_DEVICE_TYPE_CPU, CL_DEVICE_TYPE_GPU, CL_DEVICE_TYPE_ACCELERATOR, CL_DEVICE_TYPE_DEFAULT);
+
+function CLDevicesToDevices(const Devices: array of CLDevice): TArray<Compute.OpenCL.Detail.ICLDevice>;
+var
+  i: integer;
+begin
+  SetLength(result, Length(Devices));
+  for i := 0 to High(Devices) do
+    result[i] := Devices[i].Device;
+end;
 
 { CLDevice }
 
@@ -181,9 +241,9 @@ function CLDevice.GetExecutionCapabilities: CLDeviceExecCapabilities;
 begin
   result := [];
   if (FDevice.ExecutionCapabilities and CL_EXEC_KERNEL) <> 0 then
-    result := result + [ecKernel];
+    result := result + [ExecKernel];
   if (FDevice.ExecutionCapabilities and CL_EXEC_NATIVE_KERNEL) <> 0 then
-    result := result + [ecNativeKernel];
+    result := result + [ExecNativeKernel];
 end;
 
 function CLDevice.GetExtensions: string;
@@ -219,8 +279,8 @@ end;
 function CLDevice.GetLocalMemType: CLDeviceLocalMemType;
 begin
   case FDevice.LocalMemType of
-    CL_LOCAL: result := lmLocal;
-    CL_GLOBAL: result := lmGlobal;
+    CL_LOCAL: result := LocalMemTypeLocal;
+    CL_GLOBAL: result := LocalMemTypeGlobal;
   else
     raise Exception.Create('Invalid local memory type');
   end;
@@ -285,9 +345,9 @@ function CLDevice.GetQueueProperties: CLCommandQueueProperties;
 begin
   result := [];
   if (FDevice.QueueProperties and CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE) <> 0 then
-    result := result + [qpOutOfOrderExec];
+    result := result + [QueuePropertyOutOfOrderExec];
   if (FDevice.QueueProperties and CL_QUEUE_PROFILING_ENABLE) <> 0 then
-    result := result + [qpProfiling];
+    result := result + [QueuePropertyProfiling];
 end;
 
 function CLDevice.GetSupportsFP64: boolean;
@@ -300,6 +360,56 @@ begin
   result := FDevice.Version;
 end;
 
+{ CLProgram }
+
+function CLProgram.Build(const Devices: TArray<CLDevice>;
+  const Defines: array of string; const Options: string): boolean;
+var
+  devs: TArray<Compute.OpenCL.Detail.ICLDevice>;
+begin
+  devs := CLDevicesToDevices(Devices);
+
+  result := FProgram.Build(devs, Defines, Options);
+end;
+
+function CLProgram.Build(const Devices: TArray<CLDevice>;
+  const Options: string): boolean;
+begin
+  result := Build(Devices, [], Options);
+end;
+
+class function CLProgram.Create(
+  const p: Compute.OpenCL.Detail.ICLProgram): CLProgram;
+begin
+  result.FProgram := p;
+end;
+
+function CLProgram.CreateKernel(const Name: string): CLKernel;
+begin
+  result := CLKernel.Create(TCLKernelImpl.Create(Prog.LogProc, Prog, Name));
+end;
+
+function CLProgram.GetBuildLog: string;
+begin
+  result := Prog.GetBuildLog;
+end;
+
+{ CLContext }
+
+class function CLContext.Create(const c: Compute.OpenCL.Detail.ICLContext): CLContext;
+begin
+  result.FContext := c;
+end;
+
+function CLContext.CreateProgram(const Source: string): CLProgram;
+var
+  p: Compute.OpenCL.Detail.ICLProgram;
+begin
+  p := TCLProgramImpl.Create(Context.LogProc, FContext, Source);
+
+  result := CLProgram.Create(p);
+end;
+
 { CLPlatform }
 
 class function CLPlatform.Create(
@@ -308,15 +418,55 @@ begin
   result.FPlatform := p;
 end;
 
-function CLPlatform.GetAllDevices: TEnumerable<CLDevice>;
+function CLPlatform.CreateContext(const Devices: TArray<CLDevice>): CLContext;
+var
+  ctx: Compute.OpenCL.Detail.ICLContext;
+  props: TArray<TCLContextProperty>;
+  devs: TArray<Compute.OpenCL.Detail.ICLDevice>;
+  i: integer;
 begin
-  result := TDeviceEnumerable.Create(FPlatform.Devices[CL_DEVICE_TYPE_ALL]);
+  SetLength(props, 1);
+  props[0] := TCLContextProperty.Platform(FPlatform.PlatformID);
+
+  SetLength(devs, Length(Devices));
+  for i := 0 to High(Devices) do
+    devs[i] := Devices[i].Device;
+
+  ctx := Compute.OpenCL.Detail.TCLContextImpl.Create(FPlatform.LogProc, props, devs);
+  result := CLContext.Create(ctx);
+end;
+
+function CLPlatform.DevicesToArray(
+  const Devices: TEnumerable<Compute.OpenCL.Detail.ICLDevice>): TArray<CLDevice>;
+var
+  i, len: integer;
+  dev: Compute.OpenCL.Detail.ICLDevice;
+begin
+  len := 8;
+  SetLength(result, len);
+  i := 0;
+  for dev in Devices do
+  begin
+    if (i > len) then
+    begin
+      len := len * 2;
+      SetLength(result, len);
+    end;
+    result[i] := CLDevice.Create(dev);
+    i := i + 1;
+  end;
+  SetLength(result, i);
+end;
+
+function CLPlatform.GetAllDevices: TArray<CLDevice>;
+begin
+  result := DevicesToArray(FPlatform.Devices[CL_DEVICE_TYPE_ALL]);
 end;
 
 function CLPlatform.GetDevices(
-  const DeviceType: CLDeviceType): TEnumerable<CLDevice>;
+  const DeviceType: CLDeviceType): TArray<CLDevice>;
 begin
-  result := TDeviceEnumerable.Create(FPlatform.Devices[DeviceTypeMap[DeviceType]]);
+  result := DevicesToArray(FPlatform.Devices[DeviceTypeMap[DeviceType]]);
 end;
 
 function CLPlatform.GetExtensions: string;
@@ -341,7 +491,7 @@ end;
 
 function CLPlatform.GetVersion: string;
 begin
-
+  result := FPlatform.Version;
 end;
 
 { CLPlatform.TDeviceEnumerator }
@@ -392,6 +542,30 @@ end;
 function CLPlatforms.GetPlatform(const Index: integer): CLPlatform;
 begin
   result := CLPlatform.Create(FPlatforms[Index]);
+end;
+
+
+{ CLKernel }
+
+class function CLKernel.Create(
+  const k: Compute.OpenCL.Detail.ICLKernel): CLKernel;
+begin
+  result.FKernel := k;
+end;
+
+function CLKernel.GetArgumentCount: UInt32;
+begin
+  result := Kernel.ArgumentCount;
+end;
+
+function CLKernel.GetMaxWorkgroupSize: UInt32;
+begin
+  result := Kernel.MaxWorkgroupSize;
+end;
+
+function CLKernel.GetPreferredWorkgroupSizeMultiple: UInt32;
+begin
+  result := Kernel.PreferredWorkgroupSizeMultiple;
 end;
 
 end.
