@@ -481,12 +481,15 @@ begin
   end;
 end;
 
-function MergePreferredSizeMultiple(const a, b: UInt32): UInt32;
+function LCM(const a, b: UInt32): UInt32;
 var
-  cf: UInt32;
+  d: UInt32;
 begin
-  cf := GCD(a, b);
-  result := (a * b) div cf;
+  result := 0;
+  if (a = 0) and (b = 0) then
+    exit;
+  d := GCD(a, b);
+  result := (a div d) * b; // = (a * b) div d
 end;
 
 { TLoggingObject }
@@ -1276,7 +1279,7 @@ begin
   for dev in FProg.Devices do
   begin
     md := GetPreferredWorkgroupSizeMultipleDevice(dev);
-    result := MergePreferredSizeMultiple(result, md);
+    result := LCM(result, md);
   end;
 end;
 
