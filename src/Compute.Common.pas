@@ -105,9 +105,6 @@ type
       TDict = Generics.Collections.TDictionary<K, V>;
   private
     FDict: TDict;
-  public
-    constructor Create(Comparer: Generics.Defaults.IEqualityComparer<K> = nil);
-    destructor Destroy; override;
 
     function GetCount: UInt32;
     function GetItem(const Key: K): V;
@@ -119,6 +116,9 @@ type
 
     procedure Clear;
     function Remove(const Key: K): Boolean;
+  public
+    constructor Create(Comparer: Generics.Defaults.IEqualityComparer<K> = nil);
+    destructor Destroy; override;
   end;
 
   TArrayEnumerator<T> = class(TEnumerator<T>)
