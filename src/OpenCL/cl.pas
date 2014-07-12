@@ -1406,7 +1406,7 @@ type
   {$IFDEF CL_VERSION_1_0}
   TclWaitForEvents = function (
                                  num_events: TCL_uint;                          (* num_events *)
-                                 const event_list: PCL_event                    (* event_list *)
+                                 const event_list: PPCL_event                   (* event_list *)
                                  ): TCL_int;
                                  {$IFDEF CDECL}cdecl{$ELSE}stdcall{$ENDIF};
   {$ENDIF}
@@ -1414,7 +1414,7 @@ type
   {$IFDEF CL_VERSION_1_0}
   TclGetEventInfo = function (
                                event: PCL_event;                                (* event *)
-                               param_name: PCL_event_info;                      (* param_name *)
+                               param_name: TCL_event_info;                      (* param_name *)
                                param_value_size: TSize_t;                       (* param_value_size *)
                                param_value: Pointer;                            (* param_value *)
                                param_value_size_ret: PSize_t                    (* param_value_size_ret *)
