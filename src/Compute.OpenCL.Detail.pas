@@ -30,6 +30,9 @@ type
   TCLContextHandle = PCL_context;
   TCLProgramHandle = PCL_program;
   TCLKernelHandle = PCL_kernel;
+  TCLCommandQueueHandle = PCL_command_queue;
+  TCLEventHandle = PCL_event;
+  TCLBufferHandle = PCL_mem;
 
   TLoggingObject = class(TInterfacedObject)
   strict private
@@ -69,7 +72,7 @@ type
     function GetStatus: TCLStatus;
   end;
 
-  ICLDevice = interface
+  ICLDevice = interface(ICLBase)
     ['{087B4A38-774B-4DA8-8301-AABF8FF5DBE8}']
     function GetDeviceID: TCLDeviceID;
     function GetName: string;
@@ -251,6 +254,8 @@ type
     function GetCLPlatform(const Index: integer): ICLPlatform;
   end;
 
+  ICLEvent = interface;
+
   TCLContextProperty = packed record
     name: PCL_context_properties;
     value: PCL_context_properties;
@@ -264,6 +269,8 @@ type
     function GetHandle: TCLContextHandle;
     function GetDevices: TArray<ICLDevice>;
     function GetProperties: TArray<TCLContextProperty>;
+
+    procedure WaitForEvents(const Events: array of ICLEvent);
 
     property Handle: TCLContextHandle read GetHandle;
     property Devices: TArray<ICLDevice> read GetDevices;
@@ -282,6 +289,49 @@ type
     function GetHandle: TCLContextHandle;
     function GetDevices: TArray<ICLDevice>;
     function GetProperties: TArray<TCLContextProperty>;
+
+    procedure WaitForEvents(const Events: array of ICLEvent);
+  end;
+
+  TCLEventCallback = procedure(const Event: ICLEvent; const CommandExecutionStatus: TCL_int; const UserData: pointer) of object;
+
+  ICLEvent = interface(ICLBase)
+    function GetHandle: TCLEventHandle;
+    function GetCommandType: TCL_command_type;
+    function GetCommandExecutionStatus: TCL_int;
+
+    procedure SetEventCallback(const CallbackProc: TCLEventCallback; const CommandExecutionStatus: TCL_int; const UserData: pointer);
+
+    property Handle: TCLEventHandle read GetHandle;
+    property CommandType: TCL_command_type read GetCommandType;
+    property CommandExecutionStatus: TCL_int read GetCommandExecutionStatus;
+  end;
+
+  ICLUserEvent = interface(ICLEvent)
+    procedure SetCommandExecutionStatus(const Value: TCL_int);
+
+    property CommandExecutionStatus: TCL_int read GetCommandExecutionStatus write SetCommandExecutionStatus;
+  end;
+
+  TCLEventImpl = class(TCLBaseImpl, ICLEvent, ICLUserEvent)
+  strict private
+    FEvent: TCLEventHandle;
+    FCallback: TCLEventCallback;
+    FUserData: pointer;
+
+    function GetEventInfo<T>(const EventInfo: TCL_event_info): T;
+  public
+    constructor Create(const LogProc: TLogProc; const Event: TCLEventHandle);
+    constructor CreateUser(const LogProc: TLogProc; const Context: ICLContext);
+    destructor Destroy; override;
+
+    procedure DoCallback(const CommandExecutionStatus: TCL_int);
+
+    function GetHandle: TCLEventHandle;
+    function GetCommandType: TCL_command_type;
+    function GetCommandExecutionStatus: TCL_int;
+    procedure SetEventCallback(const CallbackProc: TCLEventCallback; const CommandExecutionStatus: TCL_int; const UserData: pointer);
+    procedure SetCommandExecutionStatus(const Value: TCL_int);
   end;
 
   TCLBinaries = TArray<TBytes>;
@@ -322,6 +372,7 @@ type
   end;
 
   ICLKernel = interface(ICLBase)
+    function GetHandle: TCLKernelHandle;
     function GetName: string;
     function GetArgumentCount: UInt32;
     function GetMaxWorkgroupSize: UInt32;
@@ -330,6 +381,9 @@ type
     function GetPreferredWorkgroupSizeMultipleDevice(const Device: ICLDevice): UInt32;
     function GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt64;
 
+    procedure SetArgument(const Index: TCL_uint; const Value: pointer; const Size: TSize_t);
+
+    property Handle: TCLKernelHandle read GetHandle;
     property Name: string read GetName;
     property ArgumentCount: UInt32 read GetArgumentCount;
 
@@ -353,6 +407,7 @@ type
     constructor Create(const LogProc: TLogProc; const Prog: ICLProgram; const Name: string);
     destructor Destroy; override;
 
+    function GetHandle: TCLKernelHandle;
     function GetName: string;
     function GetArgumentCount: UInt32;
     function GetMaxWorkgroupSize: UInt32;
@@ -360,6 +415,130 @@ type
     function GetMaxWorkgroupSizeDevice(const Device: ICLDevice): UInt32;
     function GetPreferredWorkgroupSizeMultipleDevice(const Device: ICLDevice): UInt32;
     function GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt64;
+
+    procedure SetArgument(const Index: TCL_uint; const Value: pointer; const Size: TSize_t);
+  end;
+
+  ICLBuffer = interface(ICLBase)
+    function GetHandle: TCLBufferHandle;
+    function GetFlags: TCL_mem_flags;
+    function GetSize: UInt64;
+
+
+    property Handle: TCLBufferHandle read GetHandle;
+    property Size: UInt64 read GetSize;
+    property Flags: TCL_mem_flags read GetFlags;
+  end;
+
+  TCLBufferImpl = class(TCLBaseImpl, ICLBuffer)
+  strict private
+    FBuffer: TCLBufferHandle;
+    FFlags: TCL_mem_flags;
+    FSize: TSize_t;
+
+    function GetMemObjectInfo<T>(const MemInfo: TCL_mem_info): T;
+  public
+    constructor Create(const LogProc: TLogProc; const Context: ICLContext;
+      const Flags: TCL_mem_flags; const Size: TSize_t; const HostPtr: pointer = nil);
+    destructor Destroy; override;
+
+    function GetHandle: TCLBufferHandle;
+    function GetFlags: TCL_mem_flags;
+    function GetSize: UInt64;
+  end;
+
+  TSize1D = packed array[0..0] of TSize_t;
+  PSize1D = ^TSize1D;
+  TSize2D = packed array[0..1] of TSize_t;
+  PSize2D = ^TSize2D;
+  TSize3D = packed array[0..2] of TSize_t;
+  PSize3D = ^TSize3D;
+
+  ICLCommandQueue = interface(ICLBase)
+    function GetHandle: TCLCommandQueueHandle;
+    function GetProperties: TCL_command_queue_properties;
+
+    procedure EnqueueReadBuffer(const SourceBuffer: ICLBuffer; const Blocking: boolean;
+      const SourceOffset, NumberOfBytes: TSize_t; const Target: pointer;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure EnqueueWriteBuffer(const TargetBuffer: ICLBuffer; const Blocking: boolean;
+      const TargetOffset, NumberOfBytes: TSize_t; const Source: pointer;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure EnqueueCopyBuffer(const SourceBuffer, TargetBuffer: ICLBuffer;
+      SourceOffset, TargetOffset, NumberOfBytes: TSize_t;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue1DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize1D;
+      const GlobalWorkSize: PSize1D;
+      const LocalWorkSize: PSize1D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue2DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize2D;
+      const GlobalWorkSize: PSize2D;
+      const LocalWorkSize: PSize2D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue3DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize3D;
+      const GlobalWorkSize: PSize3D;
+      const LocalWorkSize: PSize3D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Flush;
+    procedure Finish;
+
+    property Handle: TCLCommandQueueHandle read GetHandle;
+    property Properties: TCL_command_queue_properties read GetProperties;
+  end;
+
+  TCLCommandQueueImpl = class(TCLBaseImpl, ICLCommandQueue)
+  strict private
+    FQueue: TCLCommandQueueHandle;
+    FProperties: TCL_command_queue_properties;
+  public
+    constructor Create(const LogProc: TLogProc; const Context: ICLContext; const Device: ICLDevice;
+      const Properties: TCL_command_queue_properties);
+    destructor Destroy; override;
+
+    function GetHandle: TCLCommandQueueHandle;
+    function GetProperties: TCL_command_queue_properties;
+
+    procedure EnqueueReadBuffer(const SourceBuffer: ICLBuffer; const Blocking: boolean;
+      const SourceOffset, NumberOfBytes: TSize_t; const Target: pointer;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure EnqueueWriteBuffer(const TargetBuffer: ICLBuffer; const Blocking: boolean;
+      const TargetOffset, NumberOfBytes: TSize_t; const Source: pointer;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure EnqueueCopyBuffer(const SourceBuffer, TargetBuffer: ICLBuffer;
+      SourceOffset, TargetOffset, NumberOfBytes: TSize_t;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue1DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize1D;
+      const GlobalWorkSize: PSize1D;
+      const LocalWorkSize: PSize1D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue2DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize2D;
+      const GlobalWorkSize: PSize2D;
+      const LocalWorkSize: PSize2D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Enqueue3DRangeKernel(const Kernel: ICLKernel;
+      const GlobalWorkOffset: PSize3D;
+      const GlobalWorkSize: PSize3D;
+      const LocalWorkSize: PSize3D;
+      const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+
+    procedure Flush;
+    procedure Finish;
   end;
 
 procedure RaiseCLException(const Status: TCLStatus);
@@ -374,11 +553,14 @@ begin
   raise ECLException.Create(Status);
 end;
 
-function GetDeviceIDs(const Devices: TArray<ICLDevice>): TArray<TCLDeviceID>;
+const
+  BlockingMap: array[boolean] of TCL_uint = (CL_NON_BLOCKING, CL_BLOCKING);
+
+function GetDeviceIDs(const Devices: array of ICLDevice): TArray<TCLDeviceID>;
 var
   i: integer;
 begin
-  SetLength(result, Length(devices));
+  SetLength(result, Length(Devices));
   for i := 0 to High(Devices) do
     result[i] := Devices[i].DeviceID;
 end;
@@ -415,6 +597,15 @@ begin
   else
     result := '';
   end;
+end;
+
+function GetEventHandles(const Events: array of ICLEvent): TArray<TCLEventHandle>;
+var
+  i: integer;
+begin
+  SetLength(result, Length(Events));
+  for i := 0 to High(Events) do
+    result[i] := Events[i].Handle;
 end;
 
 function CommandQueuePropertiesToStr(const CommandQueueProperties: TCL_command_queue_properties): string;
@@ -1046,6 +1237,105 @@ begin
   result := FProperties;
 end;
 
+procedure TCLContextImpl.WaitForEvents(const Events: array of ICLEvent);
+var
+  e: TArray<TCLEventHandle>;
+begin
+  e := GetEventHandles(Events);
+
+  Status := clWaitForEvents(Length(e), PPCL_event(e));
+end;
+
+{ TCLEventImpl }
+
+procedure EventCallbackHandler(event: PCL_event; event_command_exec_status: TCL_int; user_data: Pointer); stdcall;
+var
+  eimpl: TCLEventImpl;
+begin
+  eimpl := TCLEventImpl(user_data);
+  eimpl.DoCallback(event_command_exec_status);
+end;
+
+constructor TCLEventImpl.Create(const LogProc: TLogProc; const Event: TCLEventHandle);
+begin
+  inherited Create(LogProc);
+
+  FEvent := Event;
+  // retain event so it doesn't get freed behind our backs
+  Status := clRetainEvent(Event);
+end;
+
+constructor TCLEventImpl.CreateUser(const LogProc: TLogProc;
+  const Context: ICLContext);
+var
+  errcode_ret: TCL_int;
+begin
+  inherited Create(LogProc);
+
+  FEvent := clCreateUserEvent(Context.Handle, @errcode_ret);
+  Status := errcode_ret;
+end;
+
+destructor TCLEventImpl.Destroy;
+begin
+  if (FEvent <> nil) then
+    clReleaseEvent(FEvent);
+
+  inherited;
+end;
+
+procedure TCLEventImpl.DoCallback(const CommandExecutionStatus: TCL_int);
+begin
+  FCallback(Self, CommandExecutionStatus, FUserData);
+end;
+
+function TCLEventImpl.GetCommandExecutionStatus: TCL_int;
+begin
+  result := GetEventInfo<TCL_int>(CL_EVENT_COMMAND_EXECUTION_STATUS);
+end;
+
+function TCLEventImpl.GetCommandType: TCL_command_type;
+begin
+  result := GetEventInfo<TCL_command_type>(CL_EVENT_COMMAND_TYPE);
+end;
+
+function TCLEventImpl.GetEventInfo<T>(const EventInfo: TCL_event_info): T;
+var
+  value: T;
+  retSize: TSize_t;
+begin
+  value := Default(T);
+  retSize := 0;
+  Status := clGetEventInfo(FEvent, EventInfo, SizeOf(T), @value, @retSize);
+  if (retSize <> SizeOf(T)) then
+    raise Exception.Create('Error while getting event info');
+  result := value;
+end;
+
+function TCLEventImpl.GetHandle: TCLEventHandle;
+begin
+  result := FEvent;
+end;
+
+procedure TCLEventImpl.SetCommandExecutionStatus(const Value: TCL_int);
+begin
+  Status := clSetUserEventStatus(FEvent, Value);
+end;
+
+procedure TCLEventImpl.SetEventCallback(const CallbackProc: TCLEventCallback;
+  const CommandExecutionStatus: TCL_int; const UserData: pointer);
+begin
+  raise ENotImplemented.Create('SetEventCallback');
+
+//  if Assigned(FCallback) then
+//    raise EInvalidOpException.Create('Only a single callback may be registered on an event');
+//
+//  FCallback := CallbackProc;
+//  FUserData := UserData;
+//
+//  Status := clSetEventCallback(FEvent, CommandExecutionStatus, @EventCallbackHandler, Self);
+end;
+
 { TCLProgramImpl }
 
 function TCLProgramImpl.Build(const Devices: TArray<ICLDevice>;
@@ -1109,6 +1399,8 @@ begin
 
   LogProc('Program from binaries');
   raise ENotImplemented.Create('Create Binaries');
+
+  Status := errcode_ret;
 end;
 
 destructor TCLProgramImpl.Destroy;
@@ -1222,6 +1514,11 @@ begin
   result := GetKernelInfo<TCL_uint>(CL_KERNEL_NUM_ARGS);
 end;
 
+function TCLKernelImpl.GetHandle: TCLKernelHandle;
+begin
+  result := FKernel;
+end;
+
 function TCLKernelImpl.GetKernelInfo<T>(const KernelInfo: TCL_kernel_info): T;
 var
   value: T;
@@ -1293,5 +1590,202 @@ function TCLKernelImpl.GetPrivateMemorySizeDevice(const Device: ICLDevice): UInt
 begin
   result := GetKernelWorkGroupInfo<TCL_ulong>(Device, CL_KERNEL_PRIVATE_MEM_SIZE);
 end;
+
+procedure TCLKernelImpl.SetArgument(const Index: TCL_uint; const Value: pointer;
+  const Size: TSize_t);
+begin
+  Status := clSetKernelArg(FKernel, Index, Size, Value);
+end;
+
+{ TCLBufferImpl }
+
+constructor TCLBufferImpl.Create(const LogProc: TLogProc;
+  const Context: ICLContext;
+  const Flags: TCL_mem_flags; const Size: TSize_t; const HostPtr: pointer);
+var
+  errcode_ret: TCL_int;
+begin
+  inherited Create(LogProc);
+
+  FBuffer := clCreateBuffer(Context.Handle, Flags, Size, HostPtr, @errcode_ret);
+  Status := errcode_ret;
+
+  FFlags := Flags;
+  FSize := Size;
+end;
+
+destructor TCLBufferImpl.Destroy;
+begin
+  if (FBuffer <> nil) then
+    clReleaseMemObject(FBuffer);
+
+  inherited;
+end;
+
+function TCLBufferImpl.GetFlags: TCL_mem_flags;
+begin
+  result := FFlags;
+end;
+
+function TCLBufferImpl.GetHandle: TCLBufferHandle;
+begin
+  result := FBuffer;
+end;
+
+function TCLBufferImpl.GetMemObjectInfo<T>(const MemInfo: TCL_mem_info): T;
+var
+  value: T;
+  retSize: TSize_t;
+begin
+  value := Default(T);
+  retSize := 0;
+  Status := clGetMemObjectInfo(FBuffer, MemInfo, SizeOf(T), @value, @retSize);
+  if (retSize <> SizeOf(T)) then
+    raise Exception.Create('Error while getting buffer info');
+  result := value;
+end;
+
+function TCLBufferImpl.GetSize: UInt64;
+begin
+  result := FSize;
+end;
+
+{ TCLCommandQueueImpl }
+
+constructor TCLCommandQueueImpl.Create(const LogProc: TLogProc;
+  const Context: ICLContext; const Device: ICLDevice;
+  const Properties: TCL_command_queue_properties);
+var
+  errcode_ret: TCL_int;
+begin
+  inherited Create(LogProc);
+
+  FQueue := clCreateCommandQueue(Context.Handle, Device.DeviceID, Properties, @errcode_ret);
+  Status := errcode_ret;
+
+  FProperties := Properties;
+end;
+
+destructor TCLCommandQueueImpl.Destroy;
+begin
+  if (FQueue <> nil) then
+    clReleaseCommandQueue(FQueue);
+
+  inherited;
+end;
+
+procedure TCLCommandQueueImpl.Enqueue1DRangeKernel(const Kernel: ICLKernel;
+  const GlobalWorkOffset, GlobalWorkSize, LocalWorkSize: PSize1D;
+  const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueNDRangeKernel(FQueue, Kernel.Handle, 1,
+    PSize_t(GlobalWorkOffset), PSize_t(GlobalWorkSize), PSize_t(LocalWorkSize),
+    Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.Enqueue2DRangeKernel(const Kernel: ICLKernel;
+  const GlobalWorkOffset, GlobalWorkSize, LocalWorkSize: PSize2D;
+  const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueNDRangeKernel(FQueue, Kernel.Handle, 2,
+    PSize_t(GlobalWorkOffset), PSize_t(GlobalWorkSize), PSize_t(LocalWorkSize),
+    Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.Enqueue3DRangeKernel(const Kernel: ICLKernel;
+  const GlobalWorkOffset, GlobalWorkSize, LocalWorkSize: PSize3D;
+  const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueNDRangeKernel(FQueue, Kernel.Handle, 3,
+    PSize_t(GlobalWorkOffset), PSize_t(GlobalWorkSize), PSize_t(LocalWorkSize),
+    Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.EnqueueCopyBuffer(const SourceBuffer,
+  TargetBuffer: ICLBuffer; SourceOffset, TargetOffset, NumberOfBytes: TSize_t;
+  const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueCopyBuffer(FQueue, SourceBuffer.Handle, TargetBuffer.Handle,
+    SourceOffset, TargetOffset, NumberOfBytes, Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.EnqueueReadBuffer(const SourceBuffer: ICLBuffer;
+  const Blocking: boolean; const SourceOffset, NumberOfBytes: TSize_t;
+  const Target: pointer; const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueReadBuffer(FQueue, SourceBuffer.Handle, BlockingMap[Blocking],
+    SourceOffset, NumberOfBytes, Target, Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.EnqueueWriteBuffer(const TargetBuffer: ICLBuffer;
+  const Blocking: boolean; const TargetOffset, NumberOfBytes: TSize_t;
+  const Source: pointer; const WaitList: TArray<ICLEvent>; out Event: ICLEvent);
+var
+  waitEvents: TArray<TCLEventHandle>;
+  e: TCLEventHandle;
+begin
+  waitEvents := GetEventHandles(WaitList);
+
+  Status := clEnqueueWriteBuffer(FQueue, TargetBuffer.Handle, BlockingMap[Blocking],
+    TargetOffset, NumberOfBytes, Source, Length(waitEvents), PPCL_event(waitEvents), @e);
+
+  Event := TCLEventImpl.Create(LogProc, e);
+end;
+
+procedure TCLCommandQueueImpl.Finish;
+begin
+  Status := clFinish(FQueue);
+end;
+
+procedure TCLCommandQueueImpl.Flush;
+begin
+  Status := clFlush(FQueue);
+end;
+
+function TCLCommandQueueImpl.GetHandle: TCLCommandQueueHandle;
+begin
+  result := FQueue;
+end;
+
+function TCLCommandQueueImpl.GetProperties: TCL_command_queue_properties;
+begin
+  result := FProperties;
+end;
+
 
 end.

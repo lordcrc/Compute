@@ -157,6 +157,18 @@ begin
   ExecProg(mandel);
 end;
 
+
+function NextPow2(v: UInt32): UInt64;
+begin
+  v := v or (v shr 1);
+  v := v or (v shr 2);
+  v := v or (v shr 4);
+  v := v or (v shr 8);
+  v := v or (v shr 16);
+  result := v;
+  result := result + 1;
+end;
+
 procedure BasicCLTest;
 var
   logProc: TLogProc;
@@ -166,10 +178,15 @@ var
   devs: TArray<CLDevice>;
   dev: CLDevice;
   ctx: CLContext;
+  queue: CLCommandQueue;
   source: string;
   prog: CLProgram;
   buildSuccess: boolean;
   kernel: CLKernel;
+  event: CLEvent;
+  src, dst: TArray<double>;
+  srcBuf, dstBuf: CLBuffer;
+  globalWorkSize: UInt64;
 begin
   logProc :=
     procedure(const Msg: string)
@@ -194,6 +211,9 @@ begin
   devs := plat.Devices[DeviceTypeGPU];
   ctx := plat.CreateContext(devs);
   WriteLn('Context created');
+
+  queue := ctx.CreateCommandQueue(devs[0], []);
+  WriteLn('Command queue created');
 
   source :=
     '__kernel void vector_add(__global const double* src_a, ' +
@@ -221,6 +241,44 @@ begin
   kernel := prog.CreateKernel('vector_add');
   WriteLn(Format('  Max workgroup size: %d', [kernel.MaxWorkgroupSize]));
   WriteLn(Format('  Preferred workgroup size multiple: %d', [kernel.PreferredWorkgroupSizeMultiple]));
+
+  SetLength(src, 1000);
+  for i := 0 to High(src) do
+    src[i] := i;
+  SetLength(dst, Length(src));
+
+  srcBuf := ctx.CreateDeviceBuffer<double>(BufferAccessReadOnly, src);
+  WriteLn('Source buffer created');
+
+  dstBuf := ctx.CreateDeviceBuffer(BufferAccessWriteOnly, srcBuf.Size);
+  WriteLn('Destination buffer created');
+
+  kernel.Arguments[0] := srcBuf;
+  kernel.Arguments[1] := srcBuf;
+  kernel.Arguments[2] := dstBuf;
+  kernel.Arguments[3] := Length(src);
+
+  globalWorkSize := NextPow2(Length(src));
+
+  event := queue.Enqueue1DRangeKernel(kernel, Range1D(globalWorkSize), []);
+  WriteLn('Kernel enqueued');
+  event := queue.EnqueueReadBuffer(dstBuf, BufferCommmandNonBlocking, 0, dstBuf.Size, @dst[0], [event]);
+  WriteLn('Read enqueued');
+
+  queue.Finish;
+
+  WriteLn('Queue done');
+
+  for i := 0 to High(src) do
+  begin
+    if Abs((2*src[i]) - dst[i]) > 1e-3 then
+    begin
+      WriteLn('===== DATA DIFFERS ======');
+      exit;
+    end;
+  end;
+
+  WriteLn('Destination data verfied');
 end;
 
 procedure RunTests;
