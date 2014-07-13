@@ -582,11 +582,18 @@ end;
 
 function CLEventsToEvents(const Events: array of CLEvent): TArray<Compute.OpenCL.Detail.ICLEvent>;
 var
-  i: integer;
+  i, j: integer;
 begin
   SetLength(result, Length(Events));
+  j := 0;
   for i := 0 to High(Events) do
-    result[i] := Events[i].Event;
+  begin
+    if (Events[i].Event = nil) then
+      continue;
+    result[j] := Events[i].Event;
+    j := j + 1;
+  end;
+  SetLength(result, j);
 end;
 
 function MapCommandExecutionStatus(const ExecutionStatus: TCL_int): CLCommandExecutionStatus;
