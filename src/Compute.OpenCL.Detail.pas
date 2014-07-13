@@ -661,28 +661,6 @@ begin
   result := UnicodeToLocaleBytes(s, TEncoding.ASCII.CodePage);
 end;
 
-function GCD(a, b: UInt32): UInt32;
-begin
-  result := a;
-  while (b <> 0) do
-  begin
-    result := b;
-    b := a mod b;
-    a := result;
-  end;
-end;
-
-function LCM(const a, b: UInt32): UInt32;
-var
-  d: UInt32;
-begin
-  result := 0;
-  if (a = 0) and (b = 0) then
-    exit;
-  d := GCD(a, b);
-  result := (a div d) * b; // = (a * b) div d
-end;
-
 { TLoggingObject }
 
 constructor TLoggingObject.Create(const LogProc: TLogProc);

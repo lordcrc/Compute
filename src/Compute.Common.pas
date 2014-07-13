@@ -154,10 +154,47 @@ type
   end;
 
 
+function NextPow2(v: UInt32): UInt64;
+function GCD(a, b: UInt32): UInt32;
+function LCM(const a, b: UInt32): UInt32;
+
 implementation
 
 uses
   System.RTLConsts, cl;
+
+function NextPow2(v: UInt32): UInt64;
+begin
+  v := v or (v shr 1);
+  v := v or (v shr 2);
+  v := v or (v shr 4);
+  v := v or (v shr 8);
+  v := v or (v shr 16);
+  result := v;
+  result := result + 1;
+end;
+
+function GCD(a, b: UInt32): UInt32;
+begin
+  result := a;
+  while (b <> 0) do
+  begin
+    result := b;
+    b := a mod b;
+    a := result;
+  end;
+end;
+
+function LCM(const a, b: UInt32): UInt32;
+var
+  d: UInt32;
+begin
+  result := 0;
+  if (a = 0) and (b = 0) then
+    exit;
+  d := GCD(a, b);
+  result := (a div d) * b; // = (a * b) div d
+end;
 
 { TListImpl<T> }
 
