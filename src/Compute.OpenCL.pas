@@ -75,7 +75,7 @@ type
     function GetMaxParameterSize: UInt32;
     function GetMaxWorkgroupSize: UInt32;
     function GetMaxWorkitemDimensions: UInt32;
-    function GetMaxWorkitemSizes: TArray<UInt32>;
+    function GetMaxWorkitemSizes: TArray<NativeUInt>;
     function GetProfilingTimerResolution: UInt32;
     function GetSupportedQueueProperties: CLCommandQueueProperties;
     function GetVersion: string;
@@ -120,7 +120,7 @@ type
     property MaxParameterSize: UInt32 read GetMaxParameterSize;
     property MaxWorkgroupSize: UInt32 read GetMaxWorkgroupSize;
     property MaxWorkitemDimensions: UInt32 read GetMaxWorkitemDimensions;
-    property MaxWorkitemSizes: TArray<UInt32> read GetMaxWorkitemSizes;
+    property MaxWorkitemSizes: TArray<NativeUInt> read GetMaxWorkitemSizes;
     property ProfilingTimerResolution: UInt32 read GetProfilingTimerResolution;
     property QueueProperties: CLCommandQueueProperties read GetSupportedQueueProperties;
     property Version: string read GetVersion;
@@ -735,7 +735,7 @@ begin
   result := FDevice.MaxWorkitemDimensions;
 end;
 
-function CLDevice.GetMaxWorkitemSizes: TArray<UInt32>;
+function CLDevice.GetMaxWorkitemSizes: TArray<NativeUInt>;
 begin
   result := FDevice.MaxWorkitemSizes;
 end;

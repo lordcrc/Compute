@@ -92,10 +92,10 @@ type
     function GetMaxConstantArgs: UInt32;
     function GetMaxConstantBufferSize: UInt64;
     function GetMaxMemAllocSize: UInt64;
-    function GetMaxParameterSize: UInt32;
-    function GetMaxWorkgroupSize: UInt32;
+    function GetMaxParameterSize: NativeUInt;
+    function GetMaxWorkgroupSize: NativeUInt;
     function GetMaxWorkitemDimensions: UInt32;
-    function GetMaxWorkitemSizes: TArray<UInt32>;
+    function GetMaxWorkitemSizes: TArray<NativeUInt>;
     function GetProfilingTimerResolution: UInt32;
     function GetQueueProperties: TCL_command_queue_properties;
     function GetVersion: string;
@@ -118,10 +118,10 @@ type
     property MaxConstantArgs: UInt32 read GetMaxConstantArgs;
     property MaxConstantBufferSize: UInt64 read GetMaxConstantBufferSize;
     property MaxMemAllocSize: UInt64 read GetMaxMemAllocSize;
-    property MaxParameterSize: UInt32 read GetMaxParameterSize;
-    property MaxWorkgroupSize: UInt32 read GetMaxWorkgroupSize;
+    property MaxParameterSize: NativeUInt read GetMaxParameterSize;
+    property MaxWorkgroupSize: NativeUInt read GetMaxWorkgroupSize;
     property MaxWorkitemDimensions: UInt32 read GetMaxWorkitemDimensions;
-    property MaxWorkitemSizes: TArray<UInt32> read GetMaxWorkitemSizes;
+    property MaxWorkitemSizes: TArray<NativeUInt> read GetMaxWorkitemSizes;
     property ProfilingTimerResolution: UInt32 read GetProfilingTimerResolution;
     property QueueProperties: TCL_command_queue_properties read GetQueueProperties;
     property Version: string read GetVersion;
@@ -179,10 +179,10 @@ type
     function GetMaxConstantArgs: UInt32;
     function GetMaxConstantBufferSize: UInt64;
     function GetMaxMemAllocSize: UInt64;
-    function GetMaxParameterSize: UInt32;
-    function GetMaxWorkgroupSize: UInt32;
+    function GetMaxParameterSize: NativeUInt;
+    function GetMaxWorkgroupSize: NativeUInt;
     function GetMaxWorkitemDimensions: UInt32;
-    function GetMaxWorkitemSizes: TArray<UInt32>;
+    function GetMaxWorkitemSizes: TArray<NativeUInt>;
     function GetProfilingTimerResolution: UInt32;
     function GetQueueProperties: TCL_command_queue_properties;
     function GetVersion: string;
@@ -658,7 +658,7 @@ begin
   if (rlen = 0) then
     RaiseLastOSError;
 
-  SetLength(result, rlen);
+  SetLength(result, rlen+1); // terminator
 
   if (usedDefaultChar) then
     raise EConvertError.Create('Invalid characters in input');
@@ -932,12 +932,12 @@ begin
   result := FMaxMemAllocSize;
 end;
 
-function TCLDeviceImpl.GetMaxParameterSize: UInt32;
+function TCLDeviceImpl.GetMaxParameterSize: NativeUInt;
 begin
   result := FMaxParameterSize;
 end;
 
-function TCLDeviceImpl.GetMaxWorkgroupSize: UInt32;
+function TCLDeviceImpl.GetMaxWorkgroupSize: NativeUInt;
 begin
   result := FMaxWorkgroupSize;
 end;
@@ -947,7 +947,7 @@ begin
   result := FMaxWorkitemDimensions;
 end;
 
-function TCLDeviceImpl.GetMaxWorkitemSizes: TArray<UInt32>;
+function TCLDeviceImpl.GetMaxWorkitemSizes: TArray<NativeUInt>;
 begin
   result := FMaxWorkitemSizes;
 end;

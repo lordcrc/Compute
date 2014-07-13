@@ -205,12 +205,13 @@ begin
   WriteLn('Command queue created');
 
   source :=
+    '#pragma OPENCL EXTENSION cl_khr_fp64 : enable' + #13#10 +
     '__kernel void vector_add(__global const double* src_a, ' +
     '__global const double* src_b, ' +
     '__global double* res, ' +
-    'const int num) ' +
+    'const unsigned long num) ' +
     '{ ' +
-    'const int idx = get_global_id(0); ' +
+    'const size_t idx = get_global_id(0); ' +
     'if (idx < num) ' +
     'res[idx] = src_a[idx] + src_b[idx]; ' +
     '} ';
@@ -245,7 +246,7 @@ begin
   kernel.Arguments[0] := srcBuf;
   kernel.Arguments[1] := srcBuf;
   kernel.Arguments[2] := dstBuf;
-  kernel.Arguments[3] := Length(src);
+  kernel.Arguments[3] := UInt64(Length(src));
 
   globalWorkSize := NextPow2(Length(src));
 

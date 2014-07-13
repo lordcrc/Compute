@@ -310,7 +310,7 @@ begin
 
   kernel.Arguments[0] := srcBuffer;
   kernel.Arguments[1] := resBuffer;
-  kernel.Arguments[2] := Length(Input);
+  kernel.Arguments[2] := UInt64(Length(Input));
 
   workGroupSize := kernel.PreferredWorkgroupSizeMultiple;
 

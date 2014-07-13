@@ -82,10 +82,11 @@ var
 begin
   lines := TStringListImpl.Create;
 
+  lines.Add('#pragma OPENCL EXTENSION cl_khr_fp64 : enable');
   lines.Add('__kernel void transform_double(');
   lines.Add('  __global const double* src,');
   lines.Add('  __global double* res,');
-  lines.Add('  const unsigned int num)');
+  lines.Add('  const unsigned long num)');
   lines.Add('{');
   lines.Add('  const size_t idx = get_global_id(0);');
   lines.Add('  if (idx >= num)');
