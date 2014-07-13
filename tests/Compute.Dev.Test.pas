@@ -16,7 +16,7 @@ unit Compute.Dev.Test;
 
 interface
 
-procedure RunTests;
+procedure RunDevTests;
 
 implementation
 
@@ -26,7 +26,7 @@ uses
   Compute.Statements,
   Compute.Functions,
   Compute.Interpreter,
-  Compute.OpenCL;
+  Compute.OpenCL, Compute.OpenCL.KernelGenerator, Compute.Common;
 
 procedure TestExprTree;
 var
@@ -158,17 +158,6 @@ begin
 end;
 
 
-function NextPow2(v: UInt32): UInt64;
-begin
-  v := v or (v shr 1);
-  v := v or (v shr 2);
-  v := v or (v shr 4);
-  v := v or (v shr 8);
-  v := v or (v shr 16);
-  result := v;
-  result := result + 1;
-end;
-
 procedure BasicCLTest;
 var
   logProc: TLogProc;
@@ -281,7 +270,22 @@ begin
   WriteLn('Destination data verfied');
 end;
 
-procedure RunTests;
+procedure KernelGeneratorTest;
+var
+  sqrt: Expr.Func1;
+  gen: IKernelGenerator;
+  kernelStr: string;
+begin
+  gen := DefaultKernelGenerator;
+
+  sqrt := Func.Sqrt;
+
+  kernelStr := gen.GenerateDoubleTransformKernel(Pi * sqrt(2 + _1));
+
+  WriteLn(kernelStr);
+end;
+
+procedure RunDevTests;
 begin
   //TestExprTree;
 
@@ -292,6 +296,8 @@ begin
   //FuncMandelTest;
 
   BasicCLTest;
+
+  KernelGeneratorTest;
 end;
 
 end.

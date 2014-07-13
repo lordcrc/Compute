@@ -16,7 +16,10 @@ uses
   cl_platform in '..\src\OpenCL\cl_platform.pas',
   Compute.Functions in '..\src\Compute.Functions.pas',
   Compute.OpenCL in '..\src\Compute.OpenCL.pas',
-  Compute.OpenCL.Detail in '..\src\Compute.OpenCL.Detail.pas';
+  Compute.OpenCL.Detail in '..\src\Compute.OpenCL.Detail.pas',
+  Compute.Test in 'Compute.Test.pas',
+  Compute in '..\src\Compute.pas',
+  Compute.OpenCL.KernelGenerator in '..\src\Compute.OpenCL.KernelGenerator.pas';
 
 begin
   try
