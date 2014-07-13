@@ -244,8 +244,8 @@ type
     ///	</returns>
     class operator Implicit(const ProgramImpl: Compute.OpenCL.Detail.ICLProgram): CLProgram;
 
-    function Build(const Devices: TArray<CLDevice>; const Defines: array of string; const Options: string = ''): boolean; overload;
-    function Build(const Devices: TArray<CLDevice>; const Options: string = ''): boolean; overload;
+    function Build(const Devices: array of CLDevice; const Defines: array of string; const Options: string = ''): boolean; overload;
+    function Build(const Devices: array of CLDevice; const Options: string = ''): boolean; overload;
 
     function CreateKernel(const Name: string): CLKernel;
 
@@ -536,7 +536,7 @@ type
     ///	</returns>
     class operator Implicit(const PlatformImpl: Compute.OpenCL.Detail.ICLPlatform): CLPlatform;
 
-    function CreateContext(const Devices: TArray<CLDevice>): CLContext;
+    function CreateContext(const Devices: array of CLDevice): CLContext;
 
     property Extensions: string read GetExtensions;
     property Name: string read GetName;
@@ -777,7 +777,7 @@ end;
 
 { CLProgram }
 
-function CLProgram.Build(const Devices: TArray<CLDevice>;
+function CLProgram.Build(const Devices: array of CLDevice;
   const Defines: array of string; const Options: string): boolean;
 var
   devs: TArray<Compute.OpenCL.Detail.ICLDevice>;
@@ -787,7 +787,7 @@ begin
   result := FProgram.Build(devs, Defines, Options);
 end;
 
-function CLProgram.Build(const Devices: TArray<CLDevice>;
+function CLProgram.Build(const Devices: array of CLDevice;
   const Options: string): boolean;
 begin
   result := Build(Devices, [], Options);
@@ -813,7 +813,7 @@ end;
 
 function CLEvent.GetCommandExecutionStatus: CLCommandExecutionStatus;
 begin
-  result := MapCommandExecutionStatus(FEvent.CommandExecutionStatus);
+  result := MapCommandExecutionStatus(Event.CommandExecutionStatus);
 end;
 
 function CLEvent.GetCommandType: CLCommandType;
@@ -1123,7 +1123,7 @@ end;
 
 { CLPlatform }
 
-function CLPlatform.CreateContext(const Devices: TArray<CLDevice>): CLContext;
+function CLPlatform.CreateContext(const Devices: array of CLDevice): CLContext;
 var
   ctx: Compute.OpenCL.Detail.ICLContext;
   props: TArray<TCLContextProperty>;
