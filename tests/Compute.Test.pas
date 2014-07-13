@@ -57,7 +57,7 @@ begin
   // computes output[i] := P10(input[i])
   // by default it tries to select a GPU device
   // so this can run async while the CPU does other things
-  f := AsyncTransform(input, P10);
+  f := Compute.AsyncTransform(input, P10);
 
   // wait for computations to finish
   f.Wait;
