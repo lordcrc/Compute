@@ -91,6 +91,7 @@ begin
   lines.Add('  const size_t idx = get_global_id(0);');
   lines.Add('  if (idx >= num)');
   lines.Add('    return;');
+  lines.Add('  const double src_value = src[idx];');
 
   GenerateDoubleTransformKernelBody(Expression, lines);
 
@@ -169,7 +170,7 @@ end;
 
 procedure TGPUTransformKernelGenerator.Visit(const Node: ILambdaParamNode);
 begin
-  FOutput := FOutput + 'src[idx]';
+  FOutput := FOutput + 'src_value';
 end;
 
 procedure TGPUTransformKernelGenerator.Visit(const Node: IFuncNode);
