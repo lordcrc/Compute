@@ -26,11 +26,26 @@ begin
   end;
 end;
 
+function CompareOutputs(const data1, data2: TArray<double>): boolean;
+var
+  i: integer;
+  err: double;
+begin
+  result := False;
+  for i := 0 to High(data1) do
+  begin
+    err := Abs(data1[i] - data2[i]);
+    if (err > 1e-6) then
+      exit;
+  end;
+  result := True;
+end;
+
 procedure AsyncTransformTest;
 var
   st: TDateTime;
   i: integer;
-  input, output: TArray<double>;
+  input, output, outputRef: TArray<double>;
   f: IFuture<TArray<double>>;
   P10: Expr;
 begin
@@ -70,9 +85,14 @@ begin
   WriteLn('start reference');
   st := Now;
 
-  output := ReferenceTransform(input);
+  outputRef := ReferenceTransform(input);
 
   WriteLn(Format('done reference, %.3f seconds', [MilliSecondsBetween(Now, st) / 1000]));
+
+  if CompareOutputs(output, outputRef) then
+    WriteLn('data matches')
+  else
+    WriteLn('======== DATA DIFFERS ========');
 end;
 
 procedure RunTests;
