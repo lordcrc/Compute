@@ -282,6 +282,7 @@ end;
 function TComputeAlgorithmsOpenCLImpl.Transform(const Input,
   Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
 var
+  inputSize, bufferSize: UInt64;
   srcBuffer, resBuffer: CLBuffer;
   prog: CLProgram;
   kernel: CLKernel;
@@ -289,12 +290,16 @@ var
   kernelGen: IKernelGenerator;
   workGroupSize: UInt32;
   globalWorkSize: UInt64;
-  event: CLEvent;
+  writeEvent, execEvent, readEvent: CLEvent;
+  bufferOffset, bufferRemaining, workItemOffset: UInt64;
 begin
   if (Length(Input) <> Length(Output)) then
     raise EArgumentException.Create('Transform: Input length is not equal to output length');
 
-  srcBuffer := Context.CreateDeviceBuffer(BufferAccessReadOnly, Length(Input) * SizeOf(double));
+  inputSize := Length(Input) * SizeOf(double);
+  bufferSize := Min(256 * 1024 * 1024, inputSize);
+
+  srcBuffer := Context.CreateDeviceBuffer(BufferAccessReadOnly, bufferSize);
   resBuffer := Context.CreateDeviceBuffer(BufferAccessWriteOnly, srcBuffer.Size);
 
   kernelGen := DefaultKernelGenerator;
@@ -314,20 +319,43 @@ begin
 
   workGroupSize := kernel.PreferredWorkgroupSizeMultiple;
 
-  if (workGroupSize > 1) then
+  if (workGroupSize = 1) then
+    workGroupSize := 64;
+
+  if (workGroupSize > 1) or (bufferSize < inputSize) then
   begin
-    globalWorkSize := workGroupSize * UInt32(Ceil(Length(Input) / workGroupSize));
+    globalWorkSize := workGroupSize * UInt32(Ceil(bufferSize / (SizeOf(double) * workGroupSize)));
   end
   else
   begin
     globalWorkSize := Length(Input);
   end;
 
-  event := Queue.EnqueueWriteBuffer(srcBuffer, BufferCommmandNonBlocking, 0, srcBuffer.Size, Input, []);
-  event := Queue.Enqueue1DRangeKernel(kernel, Range1D(0), Range1D(globalWorkSize), Range1D(workGroupSize), [event]);
-  event := Queue.EnqueueReadBuffer(resBuffer, BufferCommmandNonBlocking, 0, resBuffer.Size, Output, [event]);
+  workItemOffset := 0;
+  bufferOffset := 0;
 
-  result := TOpenCLFutureImpl<TArray<double>>.Create(Context, event, Output);
+  writeEvent := nil;
+  execEvent := nil;
+  readEvent := nil;
+
+  while (bufferOffset < inputSize) do
+  begin
+    bufferRemaining := inputSize - bufferOffset;
+
+    // write doesn't have to wait for the read, only last kernel exec
+    writeEvent := Queue.EnqueueWriteBuffer(srcBuffer, BufferCommmandNonBlocking, 0, Min(bufferRemaining, srcBuffer.Size), @Input[workItemOffset], [execEvent]);
+
+    // don't exec kernel until previous write has been done
+    execEvent := Queue.Enqueue1DRangeKernel(kernel, Range1D(0), Range1D(globalWorkSize), Range1D(workGroupSize), [writeEvent]);
+
+    readEvent := Queue.EnqueueReadBuffer(resBuffer, BufferCommmandNonBlocking, 0, Min(bufferRemaining, resBuffer.Size), @Output[workItemOffset], [execEvent]);
+
+    workItemOffset := workItemOffset + globalWorkSize;
+    bufferOffset := workItemOffset * SizeOf(double);
+  end;
+
+  // wait for last read
+  result := TOpenCLFutureImpl<TArray<double>>.Create(Context, readEvent, Output);
 end;
 
 end.
