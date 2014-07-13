@@ -74,6 +74,7 @@ type
 
   ICLDevice = interface(ICLBase)
     ['{087B4A38-774B-4DA8-8301-AABF8FF5DBE8}']
+
     function GetDeviceID: TCLDeviceID;
     function GetName: string;
     function GetIsAvailable: boolean;
@@ -236,6 +237,8 @@ type
   end;
 
   ICLPlatforms = interface(ICLBase)
+    ['{3D99A624-5057-4B2F-AA27-9FB28A40C1E8}']
+
     function GetCount: integer;
     function GetCLPlatform(const Index: integer): ICLPlatform;
 
@@ -296,6 +299,8 @@ type
   TCLEventCallback = procedure(const Event: ICLEvent; const CommandExecutionStatus: TCL_int; const UserData: pointer) of object;
 
   ICLEvent = interface(ICLBase)
+    ['{A02E5460-D1A0-4AC8-B07E-DA0E24DF84EA}']
+
     function GetHandle: TCLEventHandle;
     function GetCommandType: TCL_command_type;
     function GetCommandExecutionStatus: TCL_int;
@@ -308,6 +313,8 @@ type
   end;
 
   ICLUserEvent = interface(ICLEvent)
+    ['{B281D220-B6E5-4C3B-9F74-BA8EEC046655}']
+
     procedure SetCommandExecutionStatus(const Value: TCL_int);
 
     property CommandExecutionStatus: TCL_int read GetCommandExecutionStatus write SetCommandExecutionStatus;
@@ -337,6 +344,8 @@ type
   TCLBinaries = TArray<TBytes>;
 
   ICLProgram = interface(ICLBase)
+    ['{45F39B2D-3295-4FA5-BA0E-388BF36EAC45}']
+
     function Build(const Devices: TArray<ICLDevice>; const Defines: array of string; const Options: string = ''): boolean;
 
     function GetBinaries: TCLBinaries;
@@ -372,6 +381,8 @@ type
   end;
 
   ICLKernel = interface(ICLBase)
+    ['{586955A3-E258-4248-8265-0209018E2F57}']
+
     function GetHandle: TCLKernelHandle;
     function GetName: string;
     function GetArgumentCount: UInt32;
@@ -420,6 +431,8 @@ type
   end;
 
   ICLBuffer = interface(ICLBase)
+    ['{7F1BE993-D1EF-4DB5-91FF-A8A41CBCD977}']
+
     function GetHandle: TCLBufferHandle;
     function GetFlags: TCL_mem_flags;
     function GetSize: UInt64;
@@ -455,6 +468,8 @@ type
   PSize3D = ^TSize3D;
 
   ICLCommandQueue = interface(ICLBase)
+    ['{9D624027-7F96-45E9-BD3C-7DF4C62BBD44}']
+
     function GetHandle: TCLCommandQueueHandle;
     function GetProperties: TCL_command_queue_properties;
 
