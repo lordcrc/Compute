@@ -22,9 +22,11 @@ uses
 type
   Func = record
   strict private
+    class function GetSqrt: Expr.Func1; static;
     class function GetSqr: Expr.Func1; static;
     class function GetSin: Expr.Func1; static;
   public
+    class property Sqrt: Expr.Func1 read GetSqrt;
     class property Sqr: Expr.Func1 read GetSqr;
     class property Sin: Expr.Func1 read GetSin;
   end;
@@ -41,6 +43,11 @@ end;
 class function Func.GetSqr: Expr.Func1;
 begin
   result := Func1('sqr', _1 * _1);
+end;
+
+class function Func.GetSqrt: Expr.Func1;
+begin
+  result := Func1('sqrt', 0); // built-in function
 end;
 
 end.
