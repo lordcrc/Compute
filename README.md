@@ -22,7 +22,9 @@ Since this project relies on OpenCL, please make sure you have
 OpenCL platform drivers installed.
 
 AMD GPU: http://support.amd.com/en-us/download
+
 NVIDIA GPU: http://www.nvidia.com/Download/index.aspx
+
 Intel CPU: https://software.intel.com/en-us/articles/opencl-drivers
 
 
