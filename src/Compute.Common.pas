@@ -154,6 +154,7 @@ type
   end;
 
 
+function CeilU(const v: double): UInt64;
 function NextPow2(v: UInt32): UInt64;
 function GCD(a, b: UInt32): UInt32;
 function LCM(const a, b: UInt32): UInt32;
@@ -162,6 +163,15 @@ implementation
 
 uses
   System.RTLConsts, cl;
+
+function CeilU(const v: double): UInt64;
+begin
+  if (v < 0) then
+    raise ERangeError.Create('CeilU called with negative value');
+  result := UInt64(Trunc(v));
+  if (v - result) > 0 then
+    result := result + 1;
+end;
 
 function NextPow2(v: UInt32): UInt64;
 begin
