@@ -198,6 +198,11 @@ end;
 { TComputeAlgorithmsOpenCLImpl }
 
 constructor TComputeAlgorithmsOpenCLImpl.Create;
+begin
+  inherited Create;
+end;
+
+procedure TComputeAlgorithmsOpenCLImpl.Initialize;
 var
   debugLogger: TLogProc;
   platforms: CLPlatforms;
@@ -218,24 +223,9 @@ begin
   plat := platforms[0];
 
   foundDevice := False;
-  if Length(plat.Devices[DeviceTypeGPU]) > 0 then
-  begin
-    for dev in plat.Devices[DeviceTypeGPU] do
-    begin
-      if not (dev.SupportsFP64 and dev.IsAvailable) then
-        continue;
-
-      if (not foundDevice) or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)
-        or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits) then
-      begin
-        selectedDev := dev;
-        foundDevice := True;
-      end;
-    end;
-  end;
-//  if Length(plat.Devices[DeviceTypeCPU]) > 0 then
+//  if Length(plat.Devices[DeviceTypeGPU]) > 0 then
 //  begin
-//    for dev in plat.Devices[DeviceTypeCPU] do
+//    for dev in plat.Devices[DeviceTypeGPU] do
 //    begin
 //      if not (dev.SupportsFP64 and dev.IsAvailable) then
 //        continue;
@@ -248,6 +238,21 @@ begin
 //      end;
 //    end;
 //  end;
+  if Length(plat.Devices[DeviceTypeCPU]) > 0 then
+  begin
+    for dev in plat.Devices[DeviceTypeCPU] do
+    begin
+      if not (dev.SupportsFP64 and dev.IsAvailable) then
+        continue;
+
+      if (not foundDevice) or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)
+        or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits) then
+      begin
+        selectedDev := dev;
+        foundDevice := True;
+      end;
+    end;
+  end;
 
   if (not foundDevice) then
   begin
@@ -274,14 +279,10 @@ begin
   FQueue := FContext.CreateCommandQueue(FDevice);
 end;
 
-procedure TComputeAlgorithmsOpenCLImpl.Initialize;
-begin
-  // not much for now
-end;
-
 function TComputeAlgorithmsOpenCLImpl.Transform(const Input,
   Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
 var
+  vectorWidth, vectorSize: UInt32;
   inputSize, bufferSize: UInt64;
   srcBuffer, resBuffer: CLBuffer;
   prog: CLProgram;
@@ -296,19 +297,27 @@ begin
   if (Length(Input) <> Length(Output)) then
     raise EArgumentException.Create('Transform: Input length is not equal to output length');
 
+  vectorWidth := Max(1, Device.PreferredVectorWidthDouble);
   inputSize := Length(Input) * SizeOf(double);
   bufferSize := Min(256 * 1024 * 1024, inputSize);
+  vectorSize := SizeOf(double) * vectorWidth;
+
+  if ((bufferSize mod vectorSize) <> 0) then
+  begin
+    bufferSize := vectorSize * Ceil(bufferSize / vectorSize);
+  end;
 
   srcBuffer := Context.CreateDeviceBuffer(BufferAccessReadOnly, bufferSize);
   resBuffer := Context.CreateDeviceBuffer(BufferAccessWriteOnly, srcBuffer.Size);
 
-  kernelGen := DefaultKernelGenerator;
+  kernelGen := DefaultKernelGenerator(vectorWidth);
+
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
 
   prog := Context.CreateProgram(kernelSrc);
   if not prog.Build([Device]) then
   begin
-    raise Exception.Create('Error building OpenCL source:' + #13#10 + prog.BuildLog);
+    raise Exception.Create('Error building OpenCL kernel:' + #13#10 + prog.BuildLog);
   end;
 
   kernel := prog.CreateKernel('transform_double');
@@ -320,7 +329,7 @@ begin
   workGroupSize := kernel.PreferredWorkgroupSizeMultiple;
 
   if (workGroupSize = 1) then
-    workGroupSize := 64;
+    workGroupSize := kernel.MaxWorkgroupSize;
 
   if (workGroupSize > 1) or (bufferSize < inputSize) then
   begin
