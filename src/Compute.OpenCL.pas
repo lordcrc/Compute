@@ -76,6 +76,10 @@ type
     function GetMaxWorkgroupSize: UInt32;
     function GetMaxWorkitemDimensions: UInt32;
     function GetMaxWorkitemSizes: TArray<NativeUInt>;
+    function GetPreferredVectorWidthInt: UInt32;
+    function GetPreferredVectorWidthLong: UInt32;
+    function GetPreferredVectorWidthFloat: UInt32;
+    function GetPreferredVectorWidthDouble: UInt32;
     function GetProfilingTimerResolution: UInt32;
     function GetSupportedQueueProperties: CLCommandQueueProperties;
     function GetVersion: string;
@@ -121,6 +125,10 @@ type
     property MaxWorkgroupSize: UInt32 read GetMaxWorkgroupSize;
     property MaxWorkitemDimensions: UInt32 read GetMaxWorkitemDimensions;
     property MaxWorkitemSizes: TArray<NativeUInt> read GetMaxWorkitemSizes;
+    property PreferredVectorWidthInt: UInt32 read GetPreferredVectorWidthInt;
+    property PreferredVectorWidthLong: UInt32 read GetPreferredVectorWidthLong;
+    property PreferredVectorWidthFloat: UInt32 read GetPreferredVectorWidthFloat;
+    property PreferredVectorWidthDouble: UInt32 read GetPreferredVectorWidthDouble;
     property ProfilingTimerResolution: UInt32 read GetProfilingTimerResolution;
     property QueueProperties: CLCommandQueueProperties read GetSupportedQueueProperties;
     property Version: string read GetVersion;
@@ -645,56 +653,56 @@ end;
 
 function CLDevice.GetDriverVersion: string;
 begin
-  result := FDevice.DriverVersion;
+  result := Device.DriverVersion;
 end;
 
 function CLDevice.GetErrorCorrectionSupport: boolean;
 begin
-  result := FDevice.ErrorCorrectionSupport;
+  result := Device.ErrorCorrectionSupport;
 end;
 
 function CLDevice.GetExecutionCapabilities: CLDeviceExecCapabilities;
 begin
   result := [];
-  if (FDevice.ExecutionCapabilities and CL_EXEC_KERNEL) <> 0 then
+  if (Device.ExecutionCapabilities and CL_EXEC_KERNEL) <> 0 then
     result := result + [ExecKernel];
-  if (FDevice.ExecutionCapabilities and CL_EXEC_NATIVE_KERNEL) <> 0 then
+  if (Device.ExecutionCapabilities and CL_EXEC_NATIVE_KERNEL) <> 0 then
     result := result + [ExecNativeKernel];
 end;
 
 function CLDevice.GetExtensions: string;
 begin
-  result := FDevice.Extensions;
+  result := Device.Extensions;
 end;
 
 function CLDevice.GetGlobalMemSize: UInt64;
 begin
-  result := FDevice.GlobalMemSize;
+  result := Device.GlobalMemSize;
 end;
 
 function CLDevice.GetIsAvailable: boolean;
 begin
-  result := FDevice.IsAvailable;
+  result := Device.IsAvailable;
 end;
 
 function CLDevice.GetIsType(const DeviceType: CLDeviceType): boolean;
 begin
-  result := FDevice.IsType[DeviceTypeMap[DeviceType]];
+  result := Device.IsType[DeviceTypeMap[DeviceType]];
 end;
 
 function CLDevice.GetLittleEndian: boolean;
 begin
-  result := FDevice.LittleEndian;
+  result := Device.LittleEndian;
 end;
 
 function CLDevice.GetLocalMemSize: UInt64;
 begin
-  result := FDevice.LocalMemSize;
+  result := Device.LocalMemSize;
 end;
 
 function CLDevice.GetLocalMemType: CLDeviceLocalMemType;
 begin
-  case FDevice.LocalMemType of
+  case Device.LocalMemType of
     CL_LOCAL: result := LocalMemTypeLocal;
     CL_GLOBAL: result := LocalMemTypeGlobal;
   else
@@ -704,76 +712,96 @@ end;
 
 function CLDevice.GetMaxClockFrequency: UInt32;
 begin
-  result := FDevice.MaxClockFrequency;
+  result := Device.MaxClockFrequency;
 end;
 
 function CLDevice.GetMaxComputeUnits: UInt32;
 begin
-  result := FDevice.MaxComputeUnits;
+  result := Device.MaxComputeUnits;
 end;
 
 function CLDevice.GetMaxConstantArgs: UInt32;
 begin
-  result := FDevice.MaxConstantArgs;
+  result := Device.MaxConstantArgs;
 end;
 
 function CLDevice.GetMaxConstantBufferSize: UInt64;
 begin
-  result := FDevice.MaxConstantBufferSize;
+  result := Device.MaxConstantBufferSize;
 end;
 
 function CLDevice.GetMaxMemAllocSize: UInt64;
 begin
-  result := FDevice.MaxMemAllocSize;
+  result := Device.MaxMemAllocSize;
 end;
 
 function CLDevice.GetMaxParameterSize: UInt32;
 begin
-  result := FDevice.MaxParameterSize;
+  result := Device.MaxParameterSize;
 end;
 
 function CLDevice.GetMaxWorkgroupSize: UInt32;
 begin
-  result := FDevice.MaxWorkgroupSize;
+  result := Device.MaxWorkgroupSize;
 end;
 
 function CLDevice.GetMaxWorkitemDimensions: UInt32;
 begin
-  result := FDevice.MaxWorkitemDimensions;
+  result := Device.MaxWorkitemDimensions;
 end;
 
 function CLDevice.GetMaxWorkitemSizes: TArray<NativeUInt>;
 begin
-  result := FDevice.MaxWorkitemSizes;
+  result := Device.MaxWorkitemSizes;
 end;
 
 function CLDevice.GetName: string;
 begin
-  result := FDevice.Name;
+  result := Device.Name;
+end;
+
+function CLDevice.GetPreferredVectorWidthDouble: UInt32;
+begin
+  result := Device.PreferredVectorWidthDouble;
+end;
+
+function CLDevice.GetPreferredVectorWidthFloat: UInt32;
+begin
+  result := Device.PreferredVectorWidthFloat;
+end;
+
+function CLDevice.GetPreferredVectorWidthInt: UInt32;
+begin
+  result := Device.PreferredVectorWidthInt;
+end;
+
+function CLDevice.GetPreferredVectorWidthLong: UInt32;
+begin
+  result := Device.PreferredVectorWidthLong;
 end;
 
 function CLDevice.GetProfilingTimerResolution: UInt32;
 begin
-  result := FDevice.ProfilingTimerResolution;
+  result := Device.ProfilingTimerResolution;
 end;
 
 function CLDevice.GetSupportedQueueProperties: CLCommandQueueProperties;
 begin
   result := [];
-  if (FDevice.QueueProperties and CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE) <> 0 then
+  if (Device.QueueProperties and CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE) <> 0 then
     result := result + [QueuePropertyOutOfOrderExec];
-  if (FDevice.QueueProperties and CL_QUEUE_PROFILING_ENABLE) <> 0 then
+  if (Device.QueueProperties and CL_QUEUE_PROFILING_ENABLE) <> 0 then
     result := result + [QueuePropertyProfiling];
 end;
 
 function CLDevice.GetSupportsFP64: boolean;
 begin
-  result := FDevice.SupportsFP64;
+  result := Device.SupportsFP64;
 end;
 
 function CLDevice.GetVersion: string;
 begin
-  result := FDevice.Version;
+  result := Device.Version;
 end;
 
 class operator CLDevice.Implicit(

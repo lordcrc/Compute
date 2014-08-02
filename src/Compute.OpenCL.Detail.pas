@@ -96,6 +96,10 @@ type
     function GetMaxWorkgroupSize: NativeUInt;
     function GetMaxWorkitemDimensions: UInt32;
     function GetMaxWorkitemSizes: TArray<NativeUInt>;
+    function GetPreferredVectorWidthInt: UInt32;
+    function GetPreferredVectorWidthLong: UInt32;
+    function GetPreferredVectorWidthFloat: UInt32;
+    function GetPreferredVectorWidthDouble: UInt32;
     function GetProfilingTimerResolution: UInt32;
     function GetQueueProperties: TCL_command_queue_properties;
     function GetVersion: string;
@@ -122,6 +126,10 @@ type
     property MaxWorkgroupSize: NativeUInt read GetMaxWorkgroupSize;
     property MaxWorkitemDimensions: UInt32 read GetMaxWorkitemDimensions;
     property MaxWorkitemSizes: TArray<NativeUInt> read GetMaxWorkitemSizes;
+    property PreferredVectorWidthInt: UInt32 read GetPreferredVectorWidthInt;
+    property PreferredVectorWidthLong: UInt32 read GetPreferredVectorWidthLong;
+    property PreferredVectorWidthFloat: UInt32 read GetPreferredVectorWidthFloat;
+    property PreferredVectorWidthDouble: UInt32 read GetPreferredVectorWidthDouble;
     property ProfilingTimerResolution: UInt32 read GetProfilingTimerResolution;
     property QueueProperties: TCL_command_queue_properties read GetQueueProperties;
     property Version: string read GetVersion;
@@ -150,6 +158,10 @@ type
     FMaxWorkgroupSize: TSize_t;
     FMaxWorkitemDimensions: TCL_uint;
     FMaxWorkitemSizes: TArray<TSize_t>;
+    FPreferredVectorWidthInt: UInt32;
+    FPreferredVectorWidthLong: UInt32;
+    FPreferredVectorWidthFloat: UInt32;
+    FPreferredVectorWidthDouble: UInt32;
     FProfilingTimerResolution: TSize_t;
     FQueueProperties: TCL_command_queue_properties;
     FVersion: string;
@@ -183,6 +195,10 @@ type
     function GetMaxWorkgroupSize: NativeUInt;
     function GetMaxWorkitemDimensions: UInt32;
     function GetMaxWorkitemSizes: TArray<NativeUInt>;
+    function GetPreferredVectorWidthInt: UInt32;
+    function GetPreferredVectorWidthLong: UInt32;
+    function GetPreferredVectorWidthFloat: UInt32;
+    function GetPreferredVectorWidthDouble: UInt32;
     function GetProfilingTimerResolution: UInt32;
     function GetQueueProperties: TCL_command_queue_properties;
     function GetVersion: string;
@@ -765,6 +781,10 @@ begin
   FMaxWorkgroupSize := GetDeviceInfo<TSize_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE);
   FMaxWorkitemDimensions := GetDeviceInfo<TCL_uint>(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS);
   FMaxWorkitemSizes := GetDeviceInfoArray<TSize_t>(CL_DEVICE_MAX_WORK_ITEM_SIZES, FMaxWorkitemDimensions);
+  FPreferredVectorWidthInt := GetDeviceInfo<TCL_uint>(CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT);
+  FPreferredVectorWidthLong := GetDeviceInfo<TCL_uint>(CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG);
+  FPreferredVectorWidthFloat := GetDeviceInfo<TCL_uint>(CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT);
+  FPreferredVectorWidthDouble := GetDeviceInfo<TCL_uint>(CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE);
   FProfilingTimerResolution := GetDeviceInfo<TSize_t>(CL_DEVICE_PROFILING_TIMER_RESOLUTION);
   FQueueProperties := GetDeviceInfo<TCL_command_queue_properties>(CL_DEVICE_QUEUE_PROPERTIES);
 
@@ -804,6 +824,10 @@ begin
   Delete(s, 1, 2);
   Log('  Max workitem sizes: (%s)', [s]);
 
+  Log('  Preferred vector width int: %d', [FPreferredVectorWidthInt]);
+  Log('  Preferred vector width long: %d', [FPreferredVectorWidthLong]);
+  Log('  Preferred vector width float: %d', [FPreferredVectorWidthFloat]);
+  Log('  Preferred vector width double: %d', [FPreferredVectorWidthDouble]);
   Log('  Profiling timer resolution: %dns', [FProfilingTimerResolution]);
   Log('  Command queue properties: %s', [CommandQueuePropertiesToStr(FQueueProperties)]);
 end;
@@ -955,6 +979,26 @@ end;
 function TCLDeviceImpl.GetName: string;
 begin
   result := FName;
+end;
+
+function TCLDeviceImpl.GetPreferredVectorWidthDouble: UInt32;
+begin
+  result := FPreferredVectorWidthDouble;
+end;
+
+function TCLDeviceImpl.GetPreferredVectorWidthFloat: UInt32;
+begin
+  result := FPreferredVectorWidthFloat;
+end;
+
+function TCLDeviceImpl.GetPreferredVectorWidthInt: UInt32;
+begin
+  result := FPreferredVectorWidthInt;
+end;
+
+function TCLDeviceImpl.GetPreferredVectorWidthLong: UInt32;
+begin
+  result := FPreferredVectorWidthLong;
 end;
 
 function TCLDeviceImpl.GetProfilingTimerResolution: UInt32;

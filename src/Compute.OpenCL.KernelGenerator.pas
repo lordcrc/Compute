@@ -14,7 +14,7 @@ type
     function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr): string;
   end;
 
-function DefaultKernelGenerator: IKernelGenerator;
+function DefaultKernelGenerator(const VectorWidth: UInt32 = 0): IKernelGenerator;
 
 implementation
 
@@ -31,11 +31,17 @@ type
 
   TKernelGeneratorBase = class(TInterfacedObject, IKernelGenerator)
   strict private
+    FVectorWidth: UInt32;
+
     function StringListToStr(const Lines: IStringList): string;
 
     function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr): string;
   protected
     procedure GenerateDoubleTransformKernelBody(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList); virtual; abstract;
+
+    property VectorWidth: UInt32 read FVectorWidth;
+  public
+    constructor Create(const VectorWidth: UInt32);
   end;
 
   IGPUTransformKernelGenerator = interface
@@ -65,33 +71,55 @@ type
   protected
     procedure GenerateDoubleTransformKernelBody(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList); override;
   public
-    constructor Create;
+    constructor Create(const VectorWidth: UInt32);
   end;
 
-function DefaultKernelGenerator: IKernelGenerator;
+function DefaultKernelGenerator(const VectorWidth: UInt32): IKernelGenerator;
 begin
-  result := TGPUKernelGeneratorImpl.Create;
+  result := TGPUKernelGeneratorImpl.Create(VectorWidth);
 end;
 
 { TKernelGeneratorBase }
 
+constructor TKernelGeneratorBase.Create(const VectorWidth: UInt32);
+begin
+  inherited Create;
+
+  FVectorWidth := VectorWidth;
+end;
+
 function TKernelGeneratorBase.GenerateDoubleTransformKernel(
   const Expression: Compute.ExprTrees.Expr): string;
 var
+  dataType, getIdx: string;
+  logWidth: integer;
   lines: IStringList;
 begin
   lines := TStringListImpl.Create;
 
+  if (VectorWidth > 1) then
+  begin
+    dataType := 'double' + IntToStr(VectorWidth);
+    logWidth := Round(Ln(VectorWidth) / Ln(2.0));
+    getIdx := 'gid >> ' + IntToStr(logWidth);
+  end
+  else
+  begin
+    dataType := 'double';
+    getIdx := 'gid';
+  end;
+
   lines.Add('#pragma OPENCL EXTENSION cl_khr_fp64 : enable');
   lines.Add('__kernel void transform_double(');
-  lines.Add('  __global const double* src,');
-  lines.Add('  __global double* res,');
+  lines.Add('  __global const ' + dataType + '* src,');
+  lines.Add('  __global ' + dataType + '* res,');
   lines.Add('  const unsigned long num)');
   lines.Add('{');
-  lines.Add('  const size_t idx = get_global_id(0);');
-  lines.Add('  if (idx >= num)');
+  lines.Add('  const size_t gid = get_global_id(0);');
+  lines.Add('  if (gid >= num)');
   lines.Add('    return;');
-  lines.Add('  const double src_value = src[idx];');
+  lines.Add('  const size_t idx = ' + getIdx + ';');
+  lines.Add('  const ' + dataType + ' src_value = src[idx];');
 
   GenerateDoubleTransformKernelBody(Expression, lines);
 
@@ -107,9 +135,9 @@ end;
 
 { TGPUKernelGeneratorImpl }
 
-constructor TGPUKernelGeneratorImpl.Create;
+constructor TGPUKernelGeneratorImpl.Create(const VectorWidth: UInt32);
 begin
-  inherited Create;
+  inherited Create(VectorWidth);
 end;
 
 procedure TGPUKernelGeneratorImpl.GenerateDoubleTransformKernelBody(
@@ -118,7 +146,6 @@ var
   transformGenerator: IGPUTransformKernelGenerator;
   exprStr: string;
 begin
-  //Lines.Add('  res[idx] = src_a[idx] + src_b[idx];');
   transformGenerator := TGPUTransformKernelGenerator.Create;
 
   exprStr := transformGenerator.TransformDouble(Expression);
