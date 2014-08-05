@@ -22,10 +22,16 @@ uses
 type
   Func = record
   strict private
+    class function GetMax: Expr.Func2; static;
+    class function GetMin: Expr.Func2; static;
+    class function GetPow: Expr.Func2; static;
     class function GetSqrt: Expr.Func1; static;
     class function GetSqr: Expr.Func1; static;
     class function GetSin: Expr.Func1; static;
   public
+    class property Max: Expr.Func2 read GetMax;
+    class property Min: Expr.Func2 read GetMin;
+    class property Pow: Expr.Func2 read GetPow;
     class property Sqrt: Expr.Func1 read GetSqrt;
     class property Sqr: Expr.Func1 read GetSqr;
     class property Sin: Expr.Func1 read GetSin;
@@ -34,6 +40,21 @@ type
 implementation
 
 { Func }
+
+class function Func.GetMax: Expr.Func2;
+begin
+  result := Func2('max', 0); // built-in function
+end;
+
+class function Func.GetMin: Expr.Func2;
+begin
+  result := Func2('min', 0); // built-in function
+end;
+
+class function Func.GetPow: Expr.Func2;
+begin
+  result := Func2('pow', 0); // built-in function
+end;
 
 class function Func.GetSin: Expr.Func1;
 begin

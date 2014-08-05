@@ -39,7 +39,7 @@ type
     opAdd, opSub, opMul, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq,
     opNot, opNegate,
     // built-in functions
-    opSin, opCos, opSqrt
+    opMax, opMin, opSin, opCos, opSqrt, opPow
     );
 
   Instruction = record
@@ -312,9 +312,12 @@ type
     procedure OpGreaterEqProc(const Instr: Instruction);
     procedure OpNotProc(const Instr: Instruction);
     procedure OpNegateProc(const Instr: Instruction);
+    procedure OpMaxProc(const Instr: Instruction);
+    procedure OpMinProc(const Instr: Instruction);
     procedure OpSinProc(const Instr: Instruction);
     procedure OpCosProc(const Instr: Instruction);
     procedure OpSqrtProc(const Instr: Instruction);
+    procedure OpPowProc(const Instr: Instruction);
   public
     constructor Create;
     procedure Initialize(const Memory: TMemory; const Bytecode: TBytecode);
@@ -342,7 +345,8 @@ const
     'load', 'loadind', 'store', 'storeind', 'jump', 'condjump', 'call', 'ret',
     'add', 'sub', 'mul', 'and', 'or', 'xor', 'eq', 'noteq', 'less', 'lesseq', 'greater', 'greatereq',
     'not', 'negate',
-    'sin', 'cos', 'sqrt');
+    'max', 'min',
+    'sin', 'cos', 'sqrt', 'pow');
 var
   i: integer;
   instr: Instruction;
@@ -831,9 +835,12 @@ var
   fbodyLabelId: integer;
   i, maxLambdaParams: integer;
 begin
+  AddBuiltInFunc('max', 2, opMax);
+  AddBuiltInFunc('min', 2, opMin);
   AddBuiltInFunc('sin', 1, opSin);
   AddBuiltInFunc('cos', 1, opCos);
   AddBuiltInFunc('sqrt', 1, opSqrt);
+  AddBuiltInFunc('pow', 2, opPow);
 
   maxLambdaParams := 0;
 
@@ -1232,9 +1239,12 @@ begin
   FOpCodeProcs[opGreaterEq] := OpGreaterEqProc;
   FOpCodeProcs[opNot] := OpNotProc;
   FOpCodeProcs[opNegate] := OpNegateProc;
+  FOpCodeProcs[opMax] := OpMaxProc;
+  FOpCodeProcs[opMin] := OpMinProc;
   FOpCodeProcs[opSin] := OpSinProc;
   FOpCodeProcs[opCos] := OpCosProc;
   FOpCodeProcs[opSqrt] := OpSqrtProc;
+  FOpCodeProcs[opPow] := OpPowProc;
 end;
 
 procedure TVirtualMachineImpl.OpAddProc(const Instr: Instruction);
@@ -1386,6 +1396,28 @@ begin
   IncIP;
 end;
 
+procedure TVirtualMachineImpl.OpMaxProc(const Instr: Instruction);
+var
+  v1, v2, r: double;
+begin
+  v2 := _Pop;
+  v1 := _Pop;
+  r := Max(v1, v2);
+  _Push(r);
+  IncIP;
+end;
+
+procedure TVirtualMachineImpl.OpMinProc(const Instr: Instruction);
+var
+  v1, v2, r: double;
+begin
+  v2 := _Pop;
+  v1 := _Pop;
+  r := Min(v1, v2);
+  _Push(r);
+  IncIP;
+end;
+
 procedure TVirtualMachineImpl.OpMulProc(const Instr: Instruction);
 var
   v1, v2, r: double;
@@ -1435,6 +1467,17 @@ begin
   v2 := _Pop;
   v1 := _Pop;
   r := Ord((v1 <> 0) or (v2 <> 0));
+  _Push(r);
+  IncIP;
+end;
+
+procedure TVirtualMachineImpl.OpPowProc(const Instr: Instruction);
+var
+  v1, v2, r: double;
+begin
+  v2 := _Pop;
+  v1 := _Pop;
+  r := Power(v1, v2);
   _Push(r);
   IncIP;
 end;
