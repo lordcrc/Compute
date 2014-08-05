@@ -111,7 +111,13 @@ begin
 end;
 
 function TOpenCLFutureImpl<T>.GetValue: T;
+var
+  done: boolean;
 begin
+  done := not GetDone();
+  if (not done) then
+    Wait();
+
   result := FValue;
 end;
 
@@ -201,7 +207,6 @@ var
   f: IFuture<TArray<double>>;
 begin
   f := AsyncTransform(Input, Expression);
-  f.Wait;
   result := f.Value;
 end;
 
