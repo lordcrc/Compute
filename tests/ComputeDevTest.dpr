@@ -19,10 +19,13 @@ uses
   Compute.OpenCL.Detail in '..\src\Compute.OpenCL.Detail.pas',
   Compute.Test in 'Compute.Test.pas',
   Compute in '..\src\Compute.pas',
-  Compute.OpenCL.KernelGenerator in '..\src\Compute.OpenCL.KernelGenerator.pas';
+  Compute.OpenCL.KernelGenerator in '..\src\Compute.OpenCL.KernelGenerator.pas',
+  Compute.Future in '..\src\Compute.Future.pas',
+  Compute.Future.Detail in '..\src\Compute.Future.Detail.pas';
 
 begin
   try
+    RunDevTests;
     RunTests;
   except
     on E: Exception do

@@ -110,6 +110,8 @@
         <DCCReference Include="Compute.Test.pas"/>
         <DCCReference Include="..\src\Compute.pas"/>
         <DCCReference Include="..\src\Compute.OpenCL.KernelGenerator.pas"/>
+        <DCCReference Include="..\src\Compute.Future.pas"/>
+        <DCCReference Include="..\src\Compute.Future.Detail.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -18,7 +18,8 @@ interface
 
 uses
   Compute.Common,
-  Compute.ExprTrees;
+  Compute.ExprTrees,
+  Compute.Future;
 
 type
   Expr = Compute.ExprTrees.Expr;
@@ -31,27 +32,16 @@ function Func2(const Name: string; const FuncBody: Expr): Expr.Func2;
 function _1: Expr.LambdaParam;
 function _2: Expr.LambdaParam;
 
-type
-  IFuture<T> = interface
-    function GetDone: boolean;
-    function GetValue: T;
-
-    procedure Wait;
-
-    property Done: boolean read GetDone;
-    property Value: T read GetValue;
-  end;
-
 procedure InitializeCompute;
 
-function AsyncTransform(const Input: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
+function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 function Transform(const Input: TArray<double>; const Expression: Expr): TArray<double>;
 
 implementation
 
 uses
-  Compute.OpenCL, Winapi.Windows, System.SysUtils,
-  Compute.OpenCL.KernelGenerator, System.Math;
+  Winapi.Windows, System.SysUtils, System.Math,
+  Compute.OpenCL, Compute.OpenCL.KernelGenerator, Compute.Future.Detail;
 
 function Constant(const Value: double): Expr.Constant;
 begin
@@ -89,62 +79,10 @@ begin
 end;
 
 type
-  TOpenCLFutureImpl<T> = class(TInterfacedObject, IFuture<T>)
-  strict private
-    FValue: T;
-    FContext: CLContext;
-    FEvent: CLEvent;
-  public
-    // Value must be reference type
-    constructor Create(const Context: CLContext; const Event: CLEvent; const Value: T);
-
-    function GetDone: boolean;
-    function GetValue: T;
-    procedure Wait;
-
-    property Context: CLContext read FContext;
-    property Event: CLEvent read FEvent;
-  end;
-
-
-{ TOpenCLFutureImpl<T> }
-
-constructor TOpenCLFutureImpl<T>.Create(const Context: CLContext;
-  const Event: CLEvent; const Value: T);
-begin
-  inherited Create;
-
-  FContext := Context;
-  FEvent := Event;
-  FValue := Value;
-end;
-
-function TOpenCLFutureImpl<T>.GetDone: boolean;
-begin
-  result := (Event.CommandExecutionStatus = ExecutionStatusComplete);
-end;
-
-function TOpenCLFutureImpl<T>.GetValue: T;
-var
-  done: boolean;
-begin
-  done := not GetDone();
-  if (not done) then
-    Wait();
-
-  result := FValue;
-end;
-
-procedure TOpenCLFutureImpl<T>.Wait;
-begin
-  Context.WaitForEvents([Event]);
-end;
-
-type
   IComputeAlgorithms = interface
     procedure Initialize;
 
-    function Transform(const Input, Result: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
+    function Transform(const Input, Result: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
   end;
 
   TComputeAlgorithmsOpenCLImpl = class(TInterfacedObject, IComputeAlgorithms)
@@ -160,10 +98,10 @@ type
 
     procedure Initialize;
 
-    function TransformPlain(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
-    function TransformInterleaved(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
+    function TransformPlain(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
+    function TransformInterleaved(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
 
-    function Transform(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
+    function Transform(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
 
     property Device: CLDevice read FDevice;
     property Context: CLContext read FContext;
@@ -207,7 +145,7 @@ begin
   Algorithms.Initialize;
 end;
 
-function AsyncTransform(const Input: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
+function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
   output: TArray<double>;
 begin
@@ -218,7 +156,7 @@ end;
 
 function Transform(const Input: TArray<double>; const Expression: Expr): TArray<double>;
 var
-  f: IFuture<TArray<double>>;
+  f: Future<TArray<double>>;
 begin
   f := AsyncTransform(Input, Expression);
   result := f.Value;
@@ -342,7 +280,7 @@ begin
 end;
 
 function TComputeAlgorithmsOpenCLImpl.Transform(const Input,
-  Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
+  Output: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 begin
   if (Length(Input) <> Length(Output)) then
     raise EArgumentException.Create('Transform: Input length is not equal to output length');
@@ -353,7 +291,7 @@ begin
 end;
 
 function TComputeAlgorithmsOpenCLImpl.TransformInterleaved(const Input,
-  Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
+  Output: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
   vectorWidth, vectorSize: UInt32;
   inputSize, bufferSize: UInt64;
@@ -449,7 +387,7 @@ begin
 end;
 
 function TComputeAlgorithmsOpenCLImpl.TransformPlain(const Input,
-  Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>;
+  Output: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
   vectorWidth, vectorSize: UInt32;
   inputSize, bufferSize: UInt64;

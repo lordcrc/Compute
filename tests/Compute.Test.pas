@@ -10,6 +10,7 @@ uses
   System.SysUtils,
   System.DateUtils,
   Compute,
+  Compute.Future,
   Compute.Functions;
 
 function ReferenceTransform(const Input: TArray<double>): TArray<double>;
@@ -36,7 +37,11 @@ begin
   begin
     err := Abs(data1[i] - data2[i]);
     if (err > 1e-6) then
+    begin
+      Writeln(Format('%d val %.15g ref %.15g (error: %g)', [i, data1[i], data2[i], err]));
+      result := False;
       exit;
+    end;
   end;
   result := True;
 end;
@@ -46,7 +51,7 @@ var
   st: TDateTime;
   i: integer;
   input, output, outputRef: TArray<double>;
-  f: IFuture<TArray<double>>;
+  f: Future<TArray<double>>;
   P10: Expr;
 begin
   // load OpenCL platform
@@ -54,7 +59,7 @@ begin
 
 
   // initialize input
-  SetLength(input, 50000000);
+  SetLength(input, 200000000);
 
   // input values are in [-1, 1]
   for i := 0 to High(input) do
