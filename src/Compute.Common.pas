@@ -153,6 +153,7 @@ type
     property Status: TCLStatus read FStatus;
   end;
 
+function StringListToStr(const Lines: IList<string>): string;
 
 function CeilU(const v: double): UInt64;
 function NextPow2(v: UInt32): UInt64;
@@ -163,6 +164,11 @@ implementation
 
 uses
   System.RTLConsts, cl;
+
+function StringListToStr(const Lines: IList<string>): string;
+begin
+  result := String.Join(#13#10, Lines.ToArray());
+end;
 
 function CeilU(const v: double): UInt64;
 begin
