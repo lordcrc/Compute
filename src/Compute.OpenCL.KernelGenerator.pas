@@ -68,25 +68,38 @@ type
     function GetFunctions: TArray<Expr.NaryFunc>;
   end;
 
+  TExpressionGeneratorBase = class(TInterfacedObject, IExprNodeVisitor)
+  strict private
+    FOutput: string;
+
+  protected
+    procedure Emit(const s: string);
+    procedure Clear;
+
+    procedure Visit(const Node: IConstantNode); overload; virtual;
+    procedure Visit(const Node: IVariableNode); overload; virtual;
+    procedure Visit(const Node: IArrayElementNode); overload; virtual;
+    procedure Visit(const Node: IUnaryOpNode); overload; virtual;
+    procedure Visit(const Node: IBinaryOpNode); overload; virtual;
+    procedure Visit(const Node: IFuncNode); overload; virtual;
+    procedure Visit(const Node: ILambdaParamNode); overload; virtual;
+
+    property Output: string read FOutput;
+  public
+    constructor Create;
+  end;
+
   IUserFuncBodyGenerator = interface
     ['{A18ECAD5-7F4B-4D47-A606-2FACBA5AF3C3}']
 
     function GenerateUserFuncBody(const FuncBody: Compute.ExprTrees.Expr): string;
   end;
 
-  TUserFuncBodyGenerator = class(TInterfacedObject, IUserFuncBodyGenerator, IExprNodeVisitor)
+  TUserFuncBodyGenerator = class(TExpressionGeneratorBase, IUserFuncBodyGenerator)
   strict private
-    FOutput: string;
-
-    procedure Visit(const Node: IConstantNode); overload;
-    procedure Visit(const Node: IVariableNode); overload;
-    procedure Visit(const Node: IArrayElementNode); overload;
-    procedure Visit(const Node: IUnaryOpNode); overload;
-    procedure Visit(const Node: IBinaryOpNode); overload;
-    procedure Visit(const Node: IFuncNode); overload;
-    procedure Visit(const Node: ILambdaParamNode); overload;
-
     function GenerateUserFuncBody(const FuncBody: Compute.ExprTrees.Expr): string;
+  protected
+    procedure Visit(const Node: IVariableNode); override;
   public
     constructor Create;
   end;
@@ -112,19 +125,13 @@ type
     function TransformDouble(const Expression: Compute.ExprTrees.Expr): string;
   end;
 
-  TGPUTransformKernelGenerator = class(TInterfacedObject, IGPUTransformKernelGenerator, IExprNodeVisitor)
+  TGPUTransformKernelGenerator = class(TExpressionGeneratorBase, IGPUTransformKernelGenerator)
   strict private
-    FOutput: string;
-
-    procedure Visit(const Node: IConstantNode); overload;
-    procedure Visit(const Node: IVariableNode); overload;
-    procedure Visit(const Node: IArrayElementNode); overload;
-    procedure Visit(const Node: IUnaryOpNode); overload;
-    procedure Visit(const Node: IBinaryOpNode); overload;
-    procedure Visit(const Node: IFuncNode); overload;
-    procedure Visit(const Node: ILambdaParamNode); overload;
-
     function TransformDouble(const Expression: Compute.ExprTrees.Expr): string;
+  protected
+    procedure Visit(const Node: IVariableNode); override;
+    procedure Visit(const Node: IArrayElementNode); override;
+    procedure Visit(const Node: ILambdaParamNode); override;
   public
     constructor Create;
   end;
@@ -197,6 +204,100 @@ begin
 
 end;
 
+{ TExpressionGeneratorBase }
+
+procedure TExpressionGeneratorBase.Clear;
+begin
+  FOutput := '';
+end;
+
+constructor TExpressionGeneratorBase.Create;
+begin
+  inherited Create;
+end;
+
+procedure TExpressionGeneratorBase.Emit(const s: string);
+begin
+  FOutput := FOutput + s;
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IArrayElementNode);
+begin
+  Emit(Node.Data.Name + '[');
+  Node.Data.Index.Accept(Self);
+  Emit(']');
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IVariableNode);
+begin
+  Emit(Node.Data.Name);
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IConstantNode);
+begin
+  Emit(FloatToStr(Node.Data.Value, OpenCLFormatSettings));
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IUnaryOpNode);
+begin
+  Emit('(');
+  case Node.Op of
+    uoNot: Emit('!');
+    uoNegate: Emit('-');
+  else
+    raise ENotImplemented.Create('Unknown unary operator');
+  end;
+  Node.ChildNode.Accept(Self);
+  Emit(')');
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: ILambdaParamNode);
+begin
+  Emit(Node.Data.Name);
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IFuncNode);
+var
+  i: integer;
+begin
+  Emit(Node.Data.Name + '(');
+
+  for i := 0 to Node.Data.ParamCount-1 do
+  begin
+    if (i > 0) then
+      Emit(', ');
+
+    Node.Data.Params[i].Accept(Self);
+  end;
+
+  Emit(')');
+end;
+
+procedure TExpressionGeneratorBase.Visit(const Node: IBinaryOpNode);
+begin
+  Emit('(');
+  Node.ChildNode1.Accept(Self);
+  case Node.Op of
+    boAdd: Emit(' + ');
+    boSub: Emit(' - ');
+    boMul: Emit(' * ');
+    boDiv: Emit(' / ');
+    boAnd: Emit(' & ');
+    boOr: Emit(' | ');
+    boXor: Emit(' ^ ');
+    boEq: Emit(' == ');
+    boNotEq: Emit(' != ');
+    boLess: Emit(' < ');
+    boLessEq: Emit(' <= ');
+    boGreater: Emit(' > ');
+    boGreaterEq: Emit(' >= ');
+  else
+    raise ENotImplemented.Create('Unknown binary operator');
+  end;
+  Node.ChildNode2.Accept(Self);
+  Emit(')');
+end;
+
 { TUserFuncBodyGenerator }
 
 constructor TUserFuncBodyGenerator.Create;
@@ -207,89 +308,16 @@ end;
 function TUserFuncBodyGenerator.GenerateUserFuncBody(
   const FuncBody: Compute.ExprTrees.Expr): string;
 begin
-  FOutput := '';
+  Clear;
 
   FuncBody.Accept(Self);
 
-  result := FOutput;
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: IArrayElementNode);
-begin
-  FOutput := FOutput + Node.Data.Name + '[';
-  Node.Data.Index.Accept(Self);
-  FOutput := FOutput + ']';
+  result := Output;
 end;
 
 procedure TUserFuncBodyGenerator.Visit(const Node: IVariableNode);
 begin
-  //FOutput := FOutput + Node.Data.Name;
   raise ENotImplemented.Create('Variables in functions not implemented');
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: IConstantNode);
-begin
-  FOutput := FOutput + FloatToStr(Node.Data.Value, OpenCLFormatSettings);
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: IUnaryOpNode);
-begin
-  FOutput := FOutput + '(';
-  case Node.Op of
-    uoNot: FOutput := FOutput + '!';
-    uoNegate: FOutput := FOutput + '-';
-  else
-    raise ENotImplemented.Create('Unknown unary operator');
-  end;
-  Node.ChildNode.Accept(Self);
-  FOutput := FOutput + ')';
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: ILambdaParamNode);
-begin
-  FOutput := FOutput + Node.Data.Name;
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: IFuncNode);
-var
-  i: integer;
-begin
-  FOutput := FOutput + Node.Data.Name + '(';
-
-  for i := 0 to Node.Data.ParamCount-1 do
-  begin
-    if (i > 0) then
-      FOutput := FOutput + ', ';
-
-    Node.Data.Params[i].Accept(Self);
-  end;
-
-  FOutput := FOutput + ')';
-end;
-
-procedure TUserFuncBodyGenerator.Visit(const Node: IBinaryOpNode);
-begin
-  FOutput := FOutput + '(';
-  Node.ChildNode1.Accept(Self);
-  case Node.Op of
-    boAdd: FOutput := FOutput + ' + ';
-    boSub: FOutput := FOutput + ' - ';
-    boMul: FOutput := FOutput + ' * ';
-    boDiv: FOutput := FOutput + ' / ';
-    boAnd: FOutput := FOutput + ' & ';
-    boOr: FOutput := FOutput + ' | ';
-    boXor: FOutput := FOutput + ' ^ ';
-    boEq: FOutput := FOutput + ' == ';
-    boNotEq: FOutput := FOutput + ' != ';
-    boLess: FOutput := FOutput + ' < ';
-    boLessEq: FOutput := FOutput + ' <= ';
-    boGreater: FOutput := FOutput + ' > ';
-    boGreaterEq: FOutput := FOutput + ' >= ';
-  else
-    raise ENotImplemented.Create('Unknown binary operator');
-  end;
-  Node.ChildNode2.Accept(Self);
-  FOutput := FOutput + ')';
 end;
 
 { TKernelGeneratorBase }
@@ -415,11 +443,16 @@ end;
 function TGPUTransformKernelGenerator.TransformDouble(
   const Expression: Compute.ExprTrees.Expr): string;
 begin
-  FOutput := '';
+  Clear;
 
   Expression.Accept(Self);
 
-  result := FOutput;
+  result := Output;
+end;
+
+procedure TGPUTransformKernelGenerator.Visit(const Node: ILambdaParamNode);
+begin
+  Emit('src_value');
 end;
 
 procedure TGPUTransformKernelGenerator.Visit(const Node: IArrayElementNode);
@@ -430,71 +463,6 @@ end;
 procedure TGPUTransformKernelGenerator.Visit(const Node: IVariableNode);
 begin
   raise ENotSupportedException.Create('Variable not supported in transform kernel');
-end;
-
-procedure TGPUTransformKernelGenerator.Visit(const Node: IConstantNode);
-begin
-  FOutput := FOutput + FloatToStr(Node.Data.Value, OpenCLFormatSettings);
-end;
-
-procedure TGPUTransformKernelGenerator.Visit(const Node: IUnaryOpNode);
-begin
-  FOutput := FOutput + '(';
-  case Node.Op of
-    uoNot: FOutput := FOutput + '!';
-    uoNegate: FOutput := FOutput + '-';
-  else
-    raise ENotImplemented.Create('Unknown unary operator');
-  end;
-  Node.ChildNode.Accept(Self);
-  FOutput := FOutput + ')';
-end;
-
-procedure TGPUTransformKernelGenerator.Visit(const Node: ILambdaParamNode);
-begin
-  FOutput := FOutput + 'src_value';
-end;
-
-procedure TGPUTransformKernelGenerator.Visit(const Node: IFuncNode);
-var
-  i: integer;
-begin
-  FOutput := FOutput + Node.Data.Name + '(';
-
-  for i := 0 to Node.Data.ParamCount-1 do
-  begin
-    if (i > 0) then
-      FOutput := FOutput + ', ';
-
-    Node.Data.Params[i].Accept(Self);
-  end;
-
-  FOutput := FOutput + ')';
-end;
-
-procedure TGPUTransformKernelGenerator.Visit(const Node: IBinaryOpNode);
-begin
-  FOutput := FOutput + '(';
-  Node.ChildNode1.Accept(Self);
-  case Node.Op of
-    boAdd: FOutput := FOutput + ' + ';
-    boSub: FOutput := FOutput + ' - ';
-    boMul: FOutput := FOutput + ' * ';
-    boDiv: FOutput := FOutput + ' / ';
-    boAnd: FOutput := FOutput + ' & ';
-    boOr: FOutput := FOutput + ' | ';
-    boXor: FOutput := FOutput + ' ^ ';
-    boEq: FOutput := FOutput + ' == ';
-    boNotEq: FOutput := FOutput + ' != ';
-    boLess: FOutput := FOutput + ' < ';
-    boLessEq: FOutput := FOutput + ' <= ';
-    boGreater: FOutput := FOutput + ' > ';
-    boGreaterEq: FOutput := FOutput + ' >= ';
-  else
-    raise ENotImplemented.Create('Unknown binary operator');
-  end;
-  Node.ChildNode2.Accept(Self);
-  FOutput := FOutput + ')';
 end;
 
 initialization
