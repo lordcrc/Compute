@@ -67,6 +67,11 @@ type
     FNode: IExprNode;
   public
     type
+      BuiltInFuncBody = record
+      private
+        class function Create: BuiltInFuncBody; static;
+      end;
+
       Constant = record
       strict private
         FValue: double;
@@ -86,45 +91,53 @@ type
 
         class operator Negative(const Value: Expr.Variable): Expr;
 
-        class operator Add(const Value1, Value2: Expr.Variable): Expr;
-        class operator Add(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator Add(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator Add(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Add(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator Multiply(const Value1, Value2: Expr.Variable): Expr;
-        class operator Multiply(const Value1: double; const Value2: Expr.Variable): Expr;
-        class operator Multiply(const Value1: Expr.Variable; const Value2: double): Expr;
-
-        class operator Subtract(const Value1, Value2: Expr.Variable): Expr;
-        class operator Subtract(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator Subtract(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator Subtract(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Subtract(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator Equal(const Value1, Value2: Expr.Variable): Expr;
-        class operator Equal(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator Multiply(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1, Value2: Expr.Variable): Expr;
+
+        class operator Divide(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator Divide(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Divide(const Value1, Value2: Expr.Variable): Expr;
+
         class operator Equal(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator Equal(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator Equal(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator NotEqual(const Value1, Value2: Expr.Variable): Expr;
-        class operator NotEqual(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator NotEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator NotEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator NotEqual(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator LessThan(const Value1, Value2: Expr.Variable): Expr;
-        class operator LessThan(const Value1: double; const Value2: Expr.Variable): Expr;
-        class operator LessThan(const Value1: Expr.Variable; const Value2: double): Expr;
-
-        class operator LessThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
-        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: double): Expr;
-
-        class operator GreaterThan(const Value1, Value2: Expr.Variable): Expr;
-        class operator GreaterThan(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator GreaterThan(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator GreaterThan(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator GreaterThan(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator GreaterThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
-        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator GreaterThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
 
-        class operator BitwiseAnd(const Value1, Value2: Expr.Variable): Expr;
-        class operator BitwiseAnd(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator LessThan(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1, Value2: Expr.Variable): Expr;
+
+        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator LessThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
+
         class operator BitwiseAnd(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator BitwiseAnd(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator BitwiseAnd(const Value1, Value2: Expr.Variable): Expr;
+
+        class operator BitwiseOr(const Value1: Expr.Variable; const Value2: double): Expr;
+        class operator BitwiseOr(const Value1: double; const Value2: Expr.Variable): Expr;
+        class operator BitwiseOr(const Value1, Value2: Expr.Variable): Expr;
       end;
 
       ArrayElement = record
@@ -142,59 +155,77 @@ type
 
         class operator Negative(const Value: Expr.ArrayElement): Expr;
 
-        class operator Add(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator Add(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator Add(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator Add(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Add(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator Add(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Add(const Value1, Value2: Expr.ArrayElement): Expr;
 
-        class operator Multiply(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator Multiply(const Value1: double; const Value2: Expr.ArrayElement): Expr;
-        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
-        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
-
-        class operator Subtract(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator Subtract(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator Subtract(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Subtract(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Subtract(const Value1, Value2: Expr.ArrayElement): Expr;
 
-        class operator Equal(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator Equal(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator Multiply(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1, Value2: Expr.ArrayElement): Expr;
+
+        class operator Divide(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator Divide(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator Divide(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator Divide(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Divide(const Value1, Value2: Expr.ArrayElement): Expr;
+
         class operator Equal(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Equal(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator Equal(const Value1, Value2: Expr.ArrayElement): Expr;
 
-        class operator NotEqual(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator NotEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator NotEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator NotEqual(const Value1, Value2: Expr.ArrayElement): Expr;
 
-        class operator LessThan(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator LessThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
-
-        class operator LessThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
-
-        class operator GreaterThan(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator GreaterThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThan(const Value1, Value2: Expr.ArrayElement): Expr;
 
-        class operator GreaterThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
-        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
+
+        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator LessThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThan(const Value1, Value2: Expr.ArrayElement): Expr;
+
+        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
+
+        class operator BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator BitwiseAnd(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseAnd(const Value1, Value2: Expr.ArrayElement): Expr;
+
+        class operator BitwiseOr(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+        class operator BitwiseOr(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+        class operator BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseOr(const Value1, Value2: Expr.ArrayElement): Expr;
       end;
 
       ArrayVariable = record
@@ -221,85 +252,111 @@ type
         class function Create(const Name: string; const Body, Param1, Param2: Expr): NaryFunc; overload; static;
         function GetBody: Expr;
         function GetParam(const Index: integer): Expr;
+        function GetIsBuiltIn: boolean;
       public
         property Name: string read FName;
         property Body: Expr read GetBody;
         property ParamCount: integer read FParamCount;
         property Params[const Index: integer]: Expr read GetParam;
+        property IsBuiltIn: boolean read GetIsBuiltIn;
 
         class operator Negative(const Value: Expr.NaryFunc): Expr;
 
-        class operator Add(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator Add(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator Add(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator Add(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator Add(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator Add(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Add(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator Add(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Add(const Value1, Value2: Expr.NaryFunc): Expr;
 
-        class operator Multiply(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator Multiply(const Value1: double; const Value2: Expr.NaryFunc): Expr;
-        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
-        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
-        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
-
-        class operator Subtract(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator Subtract(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator Subtract(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator Subtract(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Subtract(const Value1, Value2: Expr.NaryFunc): Expr;
 
-        class operator Equal(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator Equal(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator Multiply(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Multiply(const Value1, Value2: Expr.NaryFunc): Expr;
+
+        class operator Divide(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator Divide(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator Divide(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator Divide(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator Divide(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator Divide(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Divide(const Value1, Value2: Expr.NaryFunc): Expr;
+
         class operator Equal(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator Equal(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator Equal(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator Equal(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator Equal(const Value1, Value2: Expr.NaryFunc): Expr;
 
-        class operator NotEqual(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator NotEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator NotEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator NotEqual(const Value1, Value2: Expr.NaryFunc): Expr;
 
-        class operator LessThan(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator LessThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
-
-        class operator LessThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
-
-        class operator GreaterThan(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator GreaterThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThan(const Value1, Value2: Expr.NaryFunc): Expr;
 
-        class operator GreaterThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
-        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
+
+        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator LessThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThan(const Value1, Value2: Expr.NaryFunc): Expr;
+
+        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
+
+        class operator BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator BitwiseAnd(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseAnd(const Value1, Value2: Expr.NaryFunc): Expr;
+
+        class operator BitwiseOr(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+        class operator BitwiseOr(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+        class operator BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseOr(const Value1, Value2: Expr.NaryFunc): Expr;
       end;
 
       Func1 = reference to function(const Param: Expr): NaryFunc;
@@ -315,95 +372,125 @@ type
 
         class operator Negative(const Value: Expr.LambdaParam): Expr;
 
-        class operator Add(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator Add(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator Add(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator Add(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator Add(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator Add(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator Add(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Add(const Value1, Value2: Expr.LambdaParam): Expr;
 
-        class operator Multiply(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator Multiply(const Value1: double; const Value2: Expr.LambdaParam): Expr;
-        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
-        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
-        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
-        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
-
-        class operator Subtract(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator Subtract(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator Subtract(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Subtract(const Value1, Value2: Expr.LambdaParam): Expr;
 
-        class operator Equal(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator Equal(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Multiply(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Multiply(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Multiply(const Value1, Value2: Expr.LambdaParam): Expr;
+
+        class operator Divide(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator Divide(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator Divide(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator Divide(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Divide(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator Divide(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Divide(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator Divide(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Divide(const Value1, Value2: Expr.LambdaParam): Expr;
+
         class operator Equal(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator Equal(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator Equal(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator Equal(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator Equal(const Value1, Value2: Expr.LambdaParam): Expr;
 
-        class operator NotEqual(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator NotEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator NotEqual(const Value1, Value2: Expr.LambdaParam): Expr;
 
-        class operator LessThan(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator LessThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
-
-        class operator LessThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
-        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
-
-        class operator GreaterThan(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator GreaterThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThan(const Value1, Value2: Expr.LambdaParam): Expr;
 
-        class operator GreaterThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
-        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-        class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
         class operator GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator GreaterThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator LessThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator LessThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThan(const Value1, Value2: Expr.LambdaParam): Expr;
+
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator LessThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator LessThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+
+        class operator BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator BitwiseAnd(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseAnd(const Value1, Value2: Expr.LambdaParam): Expr;
+
+        class operator BitwiseOr(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+        class operator BitwiseOr(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+        class operator BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+        class operator BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+        class operator BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+        class operator BitwiseOr(const Value1, Value2: Expr.LambdaParam): Expr;
       end;
   public
     procedure Accept(const Visitor: IExprNodeVisitor); overload;
@@ -411,6 +498,7 @@ type
 
     property Node: IExprNode read FNode;
 
+    class operator Implicit(const Value: BuiltInFuncBody): Expr;
     class operator Implicit(const Value: double): Expr;
     class operator Implicit(const Value: Constant): Expr;
     class operator Implicit(const Value: Variable): Expr;
@@ -419,16 +507,19 @@ type
     class operator Implicit(const Value: LambdaParam): Expr;
 
     class operator Negative(const Value: Expr): Expr;
+
     class operator Add(const Value1, Value2: Expr): Expr;
-    class operator Multiply(const Value1, Value2: Expr): Expr;
     class operator Subtract(const Value1, Value2: Expr): Expr;
+    class operator Multiply(const Value1, Value2: Expr): Expr;
+    class operator Divide(const Value1, Value2: Expr): Expr;
     class operator Equal(const Value1, Value2: Expr): Expr;
     class operator NotEqual(const Value1, Value2: Expr): Expr;
-    class operator LessThan(const Value1, Value2: Expr): Expr;
-    class operator LessThanOrEqual(const Value1, Value2: Expr): Expr;
     class operator GreaterThan(const Value1, Value2: Expr): Expr;
     class operator GreaterThanOrEqual(const Value1, Value2: Expr): Expr;
+    class operator LessThan(const Value1, Value2: Expr): Expr;
+    class operator LessThanOrEqual(const Value1, Value2: Expr): Expr;
     class operator BitwiseAnd(const Value1, Value2: Expr): Expr;
+    class operator BitwiseOr(const Value1, Value2: Expr): Expr;
   end;
 
   IConstantNode = interface(IExprNode)
@@ -462,7 +553,7 @@ type
     property ChildNode: IExprNode read GetChildNode;
   end;
 
-  BinaryOpType = (boAdd, boSub, boMul, boAnd, boOr, boXor, boEq, boNotEq, boLess, boLessEq, boGreater, boGreaterEq);
+  BinaryOpType = (boAdd, boSub, boMul, boDiv, boAnd, boOr, boXor, boEq, boNotEq, boLess, boLessEq, boGreater, boGreaterEq);
   IBinaryOpNode = interface(IExprNode)
     ['{7CBC4576-FBDF-4562-8E46-F2658B8DDC79}']
     function GetOp: BinaryOpType;
@@ -588,6 +679,8 @@ type
     function GetData: Expr.LambdaParam;
   end;
 
+function __BuiltInFuncBody: Expr.BuiltInFuncBody;
+
 function Constant(const Value: double): Expr.Constant;
 function Variable(const Name: string): Expr.Variable;
 function ArrayVariable(const Name: string; const Count: integer): Expr.ArrayVariable;
@@ -602,6 +695,11 @@ implementation
 
 uses
   System.SysUtils;
+
+function __BuiltInFuncBody: Expr.BuiltInFuncBody;
+begin
+  result := Expr.BuiltInFuncBody.Create;
+end;
 
 function Constant(const Value: double): Expr.Constant;
 begin
@@ -685,6 +783,8 @@ begin
   case Node.Op of
     uoNot: Output('!');
     uoNegate: Output('-');
+  else
+    raise ENotImplemented.Create('Unknown unary operator');
   end;
   Output('(');
   Node.ChildNode.Accept(Self);
@@ -727,6 +827,7 @@ begin
     boAdd: Output(' + ');
     boSub: Output(' - ');
     boMul: Output(' * ');
+    boDiv: Output(' / ');
     boAnd: Output(' && ');
     boOr: Output(' || ');
     boEq: Output(' == ');
@@ -735,6 +836,8 @@ begin
     boLessEq: Output(' <= ');
     boGreater: Output(' > ');
     boGreaterEq: Output(' >= ');
+  else
+    raise ENotImplemented.Create('Unknown binary operator');
   end;
   Node.ChildNode2.Accept(Self);
   Output(')');
@@ -743,6 +846,13 @@ end;
 procedure TExprPrinter.Visit(const Node: ILambdaParamNode);
 begin
   Output(Node.Data.Name);
+end;
+
+{ Expr.BuiltInFuncBody }
+
+class function Expr.BuiltInFuncBody.Create: BuiltInFuncBody;
+begin
+  //
 end;
 
 { Expr.Constant }
@@ -754,12 +864,22 @@ end;
 
 { Expr.Variable }
 
-class operator Expr.Variable.Add(const Value1: double; const Value2: Expr.Variable): Expr;
+class function Expr.Variable.Create(const Name: string): Expr.Variable;
+begin
+  result.FName := Name;
+end;
+
+class operator Expr.Variable.Negative(const Value: Expr.Variable): Expr;
+begin
+  result := -Expr(Value);
+end;
+
+class operator Expr.Variable.Add(const Value1: Expr.Variable; const Value2: double): Expr;
 begin
   result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.Variable.Add(const Value1: Expr.Variable; const Value2: double): Expr;
+class operator Expr.Variable.Add(const Value1: double; const Value2: Expr.Variable): Expr;
 begin
   result := Expr(Value1) + Expr(Value2);
 end;
@@ -769,156 +889,12 @@ begin
   result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.Variable.BitwiseAnd(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) and Expr(Value2);
-end;
-
-class operator Expr.Variable.BitwiseAnd(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) and Expr(Value2);
-end;
-
-class operator Expr.Variable.BitwiseAnd(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) and Expr(Value2);
-end;
-
-class function Expr.Variable.Create(const Name: string): Expr.Variable;
-begin
-  result.FName := Name;
-end;
-
-class operator Expr.Variable.Equal(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.Variable.Equal(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.Variable.Equal(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThan(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThan(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThan(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThanOrEqual(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThanOrEqual(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.Variable.GreaterThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThan(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThan(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThan(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThanOrEqual(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThanOrEqual(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.Variable.LessThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.Variable.Multiply(const Value1: double; const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.Variable.Multiply(const Value1: Expr.Variable; const Value2: double): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.Variable.Multiply(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.Variable.Negative(const Value: Expr.Variable): Expr;
-begin
-  result := -Expr(Value);
-end;
-
-class operator Expr.Variable.NotEqual(const Value1: double;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.Variable.NotEqual(const Value1: Expr.Variable;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.Variable.NotEqual(const Value1, Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.Variable.Subtract(const Value1: double; const Value2: Expr.Variable): Expr;
+class operator Expr.Variable.Subtract(const Value1: Expr.Variable; const Value2: double): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.Variable.Subtract(const Value1: Expr.Variable; const Value2: double): Expr;
+class operator Expr.Variable.Subtract(const Value1: double; const Value2: Expr.Variable): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
@@ -928,37 +904,157 @@ begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
+class operator Expr.Variable.Multiply(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.Variable.Multiply(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.Variable.Multiply(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.Variable.Divide(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.Variable.Divide(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.Variable.Divide(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.Variable.Equal(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.Variable.Equal(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.Variable.Equal(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.Variable.NotEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.Variable.NotEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.Variable.NotEqual(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThan(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThan(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThan(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.Variable.GreaterThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThan(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThan(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThan(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThanOrEqual(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThanOrEqual(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.Variable.LessThanOrEqual(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseAnd(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseAnd(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseAnd(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseOr(const Value1: Expr.Variable; const Value2: double): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseOr(const Value1: double; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.Variable.BitwiseOr(const Value1, Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
 { Expr.ArrayElement }
-
-class operator Expr.ArrayElement.Add(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Add(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Add(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Add(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Add(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
 
 class function Expr.ArrayElement.Create(const Name: string; const Count: integer; const Index: Expr): Expr.ArrayElement;
 begin
@@ -968,189 +1064,9 @@ begin
   result.FIndex[0] := Index;
 end;
 
-class operator Expr.ArrayElement.Equal(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Equal(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Equal(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Equal(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Equal(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
 function Expr.ArrayElement.GetIndex: Expr;
 begin
   result := FIndex[0];
-end;
-
-class operator Expr.ArrayElement.GreaterThan(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThan(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThanOrEqual(
-  const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThanOrEqual(
-  const Value1: Expr.ArrayElement; const Value2: double): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThan(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThan(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThan(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThan(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThanOrEqual(
-  const Value1: Expr.ArrayElement; const Value2: double): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThanOrEqual(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThanOrEqual(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThanOrEqual(
-  const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.LessThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Multiply(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Multiply(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Multiply(const Value1,
-  Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Multiply(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.ArrayElement.Multiply(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
 end;
 
 class operator Expr.ArrayElement.Negative(const Value: Expr.ArrayElement): Expr;
@@ -1158,64 +1074,304 @@ begin
   result := -Expr(Value);
 end;
 
-class operator Expr.ArrayElement.NotEqual(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Add(const Value1: Expr.ArrayElement; const Value2: double): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.NotEqual(const Value1,
-  Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Add(const Value1: double; const Value2: Expr.ArrayElement): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.NotEqual(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
+class operator Expr.ArrayElement.Add(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.NotEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
+class operator Expr.ArrayElement.Add(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.NotEqual(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Add(const Value1, Value2: Expr.ArrayElement): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.Subtract(const Value1,
-  Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Subtract(const Value1: Expr.ArrayElement; const Value2: double): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.Subtract(const Value1: Expr.ArrayElement;
-  const Value2: Expr.Variable): Expr;
+class operator Expr.ArrayElement.Subtract(const Value1: double; const Value2: Expr.ArrayElement): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.Subtract(const Value1: double;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.Subtract(const Value1: Expr.Variable;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.ArrayElement.Subtract(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.ArrayElement.Subtract(const Value1: Expr.ArrayElement;
-  const Value2: double): Expr;
+class operator Expr.ArrayElement.Subtract(const Value1, Value2: Expr.ArrayElement): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Multiply(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Multiply(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Multiply(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Multiply(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Divide(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Divide(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Divide(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Divide(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Divide(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Equal(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Equal(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Equal(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Equal(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.Equal(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.NotEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.NotEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.NotEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.NotEqual(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThan(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.GreaterThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThan(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThan(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThan(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThan(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThanOrEqual(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.LessThanOrEqual(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseAnd(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseAnd(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseOr(const Value1: Expr.ArrayElement; const Value2: double): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseOr(const Value1: double; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.ArrayElement.BitwiseOr(const Value1, Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
 end;
 
 { Expr.ArrayVariable }
@@ -1232,47 +1388,6 @@ begin
 end;
 
 { Expr.NaryFunc }
-
-class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1, Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Add(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
 
 class function Expr.NaryFunc.Create(const Name: string; const Body, Param: Expr): Expr.NaryFunc;
 begin
@@ -1295,48 +1410,6 @@ begin
   result.FParams[1] := Param2;
 end;
 
-
-class operator Expr.NaryFunc.Equal(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1, Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
 function Expr.NaryFunc.GetBody: Expr;
 begin
   result := FBody[0];
@@ -1347,214 +1420,9 @@ begin
   result := FParams[Index];
 end;
 
-class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
+function Expr.NaryFunc.GetIsBuiltIn: boolean;
 begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1,
-  Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1,
-  Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1,
-  Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1,
-  Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1,
-  Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
+  result := Body.Node = nil;
 end;
 
 class operator Expr.NaryFunc.Negative(const Value: Expr.NaryFunc): Expr;
@@ -1562,509 +1430,432 @@ begin
   result := -Expr(Value);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
+class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc; const Value2: double): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Add(const Value1: double; const Value2: Expr.NaryFunc): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1,
-  Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Add(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.NaryFunc.Add(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Add(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
+class operator Expr.NaryFunc.Add(const Value1, Value2: Expr.NaryFunc): Expr;
 begin
-  result := Expr(Value1) <> Expr(Value2);
+  result := Expr(Value1) + Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: Expr.Variable;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc; const Value2: double): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc;
-  const Value2: double): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: double; const Value2: Expr.NaryFunc): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: double;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1,
-  Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: Expr.ArrayElement;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
 
-class operator Expr.NaryFunc.Subtract(const Value1: Expr.NaryFunc;
-  const Value2: Expr.Variable): Expr;
+class operator Expr.NaryFunc.Subtract(const Value1, Value2: Expr.NaryFunc): Expr;
 begin
   result := Expr(Value1) - Expr(Value2);
 end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Multiply(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Divide(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.Equal(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.NotEqual(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <> Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThan(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.GreaterThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThan(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.LessThanOrEqual(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseAnd(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: Expr.NaryFunc; const Value2: double): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: double; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.NaryFunc.BitwiseOr(const Value1, Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
 
 { Expr.LambdaParam }
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) + Expr(Value2);
-end;
 
 class function Expr.LambdaParam.Create(const Name: string): LambdaParam;
 begin
   result.FName := Name;
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) = Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) > Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(
-  const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(
-  const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(
-  const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(
-  const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.GreaterThanOrEqual(
-  const Value1: Expr.LambdaParam; const Value2: double): Expr;
-begin
-  result := Expr(Value1) >= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) < Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) <= Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
-begin
-  result := Expr(Value1) * Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1,
-  Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
-end;
-
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
-begin
-  result := Expr(Value1) <> Expr(Value2);
 end;
 
 class operator Expr.LambdaParam.Negative(const Value: Expr.LambdaParam): Expr;
@@ -2072,88 +1863,558 @@ begin
   result := -Expr(Value);
 end;
 
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Add(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) + Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Subtract(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) - Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Multiply(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) * Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Divide(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) / Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.Equal(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) = Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
 begin
   result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
 begin
   result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
 begin
   result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
-  const Value2: double): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.Variable;
-  const Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1,
-  Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: double;
-  const Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
-  const Value2: Expr.Variable): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.NaryFunc;
-  const Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.NotEqual(const Value1, Value2: Expr.LambdaParam): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) <> Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
-  const Value2: Expr.NaryFunc): Expr;
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) > Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.ArrayElement;
-  const Value2: Expr.LambdaParam): Expr;
+class operator Expr.LambdaParam.GreaterThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) > Expr(Value2);
 end;
 
-class operator Expr.LambdaParam.Subtract(const Value1: Expr.LambdaParam;
-  const Value2: Expr.ArrayElement): Expr;
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
 begin
-  result := Expr(Value1) - Expr(Value2);
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThan(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) > Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.GreaterThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) >= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThan(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) < Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.LessThanOrEqual(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) <= Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseAnd(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) and Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.LambdaParam; const Value2: double): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: double; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.Variable): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.Variable; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.ArrayElement): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.ArrayElement; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.LambdaParam; const Value2: Expr.NaryFunc): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1: Expr.NaryFunc; const Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
+end;
+
+class operator Expr.LambdaParam.BitwiseOr(const Value1, Value2: Expr.LambdaParam): Expr;
+begin
+  result := Expr(Value1) or Expr(Value2);
 end;
 
 { TExpr }
 
 procedure Expr.Accept(const Visitor: IExprNodeVisitor);
 begin
-  FNode.Accept(Visitor);
+  if Assigned(FNode) then
+    FNode.Accept(Visitor);
 end;
 
 procedure Expr.Accept(const Transformer: IExprNodeTransformer);
 begin
-  FNode := FNode.Accept(Transformer);
+  if Assigned(FNode) then
+    FNode := FNode.Accept(Transformer);
 end;
 
 class operator Expr.Add(const Value1, Value2: Expr): Expr;
@@ -2164,6 +2425,16 @@ end;
 class operator Expr.BitwiseAnd(const Value1, Value2: Expr): Expr;
 begin
   result.FNode := TBinaryOpNodeImpl.Create(boAnd, Value1.FNode, Value2.FNode);
+end;
+
+class operator Expr.BitwiseOr(const Value1, Value2: Expr): Expr;
+begin
+  result.FNode := TBinaryOpNodeImpl.Create(boOr, Value1.FNode, Value2.FNode);
+end;
+
+class operator Expr.Divide(const Value1, Value2: Expr): Expr;
+begin
+  result.FNode := TBinaryOpNodeImpl.Create(boDiv, Value1.FNode, Value2.FNode);
 end;
 
 class operator Expr.Equal(const Value1, Value2: Expr): Expr;
@@ -2219,6 +2490,12 @@ end;
 class operator Expr.Implicit(const Value: LambdaParam): Expr;
 begin
   result.FNode := TLambdaParamNodeImpl.Create(Value);
+end;
+
+class operator Expr.Implicit(const Value: BuiltInFuncBody): Expr;
+begin
+  // empty body
+  result.FNode := nil;
 end;
 
 class operator Expr.Multiply(const Value1, Value2: Expr): Expr;

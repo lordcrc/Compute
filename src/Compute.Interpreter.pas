@@ -36,7 +36,7 @@ uses
 
 type
   OpCode = (opLoad, opLoadIndirect, opStore, opStoreIndirect, opJump, opCondJump, opCall, opRet,
-    opAdd, opSub, opMul, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq,
+    opAdd, opSub, opMul, opDiv, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq,
     opNot, opNegate,
     // built-in functions
     opMax, opMin, opSin, opCos, opSqrt, opPow
@@ -301,6 +301,7 @@ type
     procedure OpAddProc(const Instr: Instruction);
     procedure OpSubProc(const Instr: Instruction);
     procedure OpMulProc(const Instr: Instruction);
+    procedure OpDivProc(const Instr: Instruction);
     procedure OpAndProc(const Instr: Instruction);
     procedure OpOrProc(const Instr: Instruction);
     procedure OpXorProc(const Instr: Instruction);
@@ -343,7 +344,7 @@ procedure PrintBytecode(const bytecode: TBytecode; const Variables: TArray<MemVa
 const
   OpName: array[OpCode] of string = (
     'load', 'loadind', 'store', 'storeind', 'jump', 'condjump', 'call', 'ret',
-    'add', 'sub', 'mul', 'and', 'or', 'xor', 'eq', 'noteq', 'less', 'lesseq', 'greater', 'greatereq',
+    'add', 'sub', 'mul', 'div', 'and', 'or', 'xor', 'eq', 'noteq', 'less', 'lesseq', 'greater', 'greatereq',
     'not', 'negate',
     'max', 'min',
     'sin', 'cos', 'sqrt', 'pow');
@@ -950,7 +951,7 @@ end;
 procedure TStmtCompiler.Visit(const Node: IBinaryOpNode);
 const
   OpMap: array[BinaryOpType] of OpCode =
-    (opAdd, opSub, opMul, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq);
+    (opAdd, opSub, opMul, opDiv, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq);
 var
   op: OpCode;
 begin
@@ -1228,6 +1229,7 @@ begin
   FOpCodeProcs[opAdd] := OpAddProc;
   FOpCodeProcs[opSub] := OpSubProc;
   FOpCodeProcs[opMul] := OpMulProc;
+  FOpCodeProcs[opDiv] := OpDivProc;
   FOpCodeProcs[opAnd] := OpAndProc;
   FOpCodeProcs[opOr] := OpOrProc;
   FOpCodeProcs[opXor] := OpXorProc;
@@ -1298,6 +1300,17 @@ var
 begin
   v := _Pop;
   r := Cos(v);
+  _Push(r);
+  IncIP;
+end;
+
+procedure TVirtualMachineImpl.OpDivProc(const Instr: Instruction);
+var
+  v1, v2, r: double;
+begin
+  v2 := _Pop;
+  v1 := _Pop;
+  r := v1 / v2;
   _Push(r);
   IncIP;
 end;

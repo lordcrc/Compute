@@ -43,22 +43,22 @@ implementation
 
 class function Func.GetMax: Expr.Func2;
 begin
-  result := Func2('max', 0); // built-in function
+  result := Func2('max', __BuiltInFuncBody);
 end;
 
 class function Func.GetMin: Expr.Func2;
 begin
-  result := Func2('min', 0); // built-in function
+  result := Func2('min', __BuiltInFuncBody);
 end;
 
 class function Func.GetPow: Expr.Func2;
 begin
-  result := Func2('pow', 0); // built-in function
+  result := Func2('pow', __BuiltInFuncBody);
 end;
 
 class function Func.GetSin: Expr.Func1;
 begin
-  result := Func1('sin', 0); // built-in function
+  result := Func1('sin', __BuiltInFuncBody);
 end;
 
 class function Func.GetSqr: Expr.Func1;
@@ -68,7 +68,7 @@ end;
 
 class function Func.GetSqrt: Expr.Func1;
 begin
-  result := Func1('sqrt', 0); // built-in function
+  result := Func1('sqrt', __BuiltInFuncBody);
 end;
 
 end.
