@@ -19,10 +19,29 @@ interface
 uses
   Compute.Common,
   Compute.ExprTrees,
+  Compute.OpenCL,
   Compute.Future;
 
 type
   Expr = Compute.ExprTrees.Expr;
+
+  Buffer = record
+  strict private
+    FCmdQueue: Compute.OpenCL.CLCommandQueue;
+    FBuffer: Compute.OpenCL.CLBuffer;
+
+    function GetSize: UInt64;
+  private
+    class function Create(const CmdQueue: Compute.OpenCL.CLCommandQueue; const Buf: Compute.OpenCL.CLBuffer): Buffer; static;
+
+    property CmdQueue: Compute.OpenCL.CLCommandQueue read FCmdQueue;
+    property Buffer: Compute.OpenCL.CLBuffer read FBuffer;
+  public
+
+    function ToArray: TArray<double>;
+
+    property Size: UInt64 read GetSize;
+  end;
 
 function Constant(const Value: double): Expr.Constant;
 function Variable(const Name: string): Expr.Variable;
@@ -34,14 +53,21 @@ function _2: Expr.LambdaParam;
 
 procedure InitializeCompute;
 
-function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>;
+function NewBuffer(const Size: UInt64): Buffer; overload;
+function NewBuffer(const InitialData: TArray<double>): Buffer; overload;
+procedure CopyBuffer(const SourceBuffer, DestBuffer: Buffer);
+
+function AsyncTransform(const InputBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
+// the output buffer is returned in the future
+function AsyncTransform(const InputBuffer, OutputBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
+function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
 function Transform(const Input: TArray<double>; const Expression: Expr): TArray<double>;
 
 implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.Math,
-  Compute.OpenCL, Compute.OpenCL.KernelGenerator, Compute.Future.Detail;
+  Compute.OpenCL.KernelGenerator, Compute.Future.Detail;
 
 function Constant(const Value: double): Expr.Constant;
 begin
@@ -78,11 +104,42 @@ begin
   result := Compute.ExprTrees._2;
 end;
 
+{ Buffer }
+
+class function Buffer.Create(const CmdQueue: Compute.OpenCL.CLCommandQueue;
+  const Buf: Compute.OpenCL.CLBuffer): Buffer;
+begin
+  result.FCmdQueue := CmdQueue;
+  result.FBuffer := Buf;
+end;
+
+function Buffer.GetSize: UInt64;
+begin
+  result := FBuffer.Size;
+end;
+
+function Buffer.ToArray: TArray<double>;
+var
+  len: UInt64;
+begin
+  len := FBuffer.Size div SizeOf(double);
+  SetLength(result, len);
+
+  FCmdQueue.EnqueueReadBuffer(FBuffer, BufferCommandBlocking, 0, len * SizeOf(double), result, []);
+end;
+
+
 type
   IComputeAlgorithms = interface
+    ['{941C09AD-FEEC-4BFE-A9C1-C40A3C0D27C0}']
+
     procedure Initialize;
 
+    function AllocDeviceBuffer(const Size: UInt64; const InitialData: pointer = nil): Buffer;
+    function AllocHostBuffer(const Size: UInt64; const InitialData: pointer = nil): Buffer;
+
     function Transform(const Input, Result: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
+    function Transform(const InputBuffer, ResultBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
   end;
 
   TComputeAlgorithmsOpenCLImpl = class(TInterfacedObject, IComputeAlgorithms)
@@ -98,10 +155,14 @@ type
 
     procedure Initialize;
 
+    function AllocDeviceBuffer(const Size: UInt64; const InitialData: pointer): Buffer;
+    function AllocHostBuffer(const Size: UInt64; const InitialData: pointer): Buffer;
+
     function TransformPlain(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
     function TransformInterleaved(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
 
     function Transform(const Input, Output: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
+    function Transform(const InputBuffer, ResultBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
 
     property Device: CLDevice read FDevice;
     property Context: CLContext read FContext;
@@ -145,6 +206,46 @@ begin
   Algorithms.Initialize;
 end;
 
+function NewBuffer(const Size: UInt64): Buffer;
+begin
+  result := Algorithms.AllocHostBuffer(Size);
+end;
+
+function NewBuffer(const InitialData: TArray<double>): Buffer;
+var
+  size: UInt64;
+begin
+  size := SizeOf(double) * Length(InitialData);
+  result := Algorithms.AllocHostBuffer(size, InitialData);
+end;
+
+procedure CopyBuffer(const SourceBuffer, DestBuffer: Buffer);
+var
+  event: CLEvent;
+begin
+  event := DestBuffer.CmdQueue.EnqueueCopyBuffer(
+    SourceBuffer.Buffer,
+    DestBuffer.Buffer,
+    0, 0,
+    Min(SourceBuffer.Buffer.Size, DestBuffer.Buffer.Size), []);
+
+  event.Wait;
+end;
+
+function AsyncTransform(const InputBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
+var
+  outputBuffer: Buffer;
+begin
+  outputBuffer := NewBuffer(InputBuffer.Size);
+
+  result := AsyncTransform(InputBuffer, outputBuffer, Expression);
+end;
+
+function AsyncTransform(const InputBuffer, OutputBuffer: Buffer; const Expression: Expr): Future<Buffer>; overload;
+begin
+  result := Algorithms.Transform(InputBuffer, OutputBuffer, Expression);
+end;
+
 function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
   output: TArray<double>;
@@ -163,6 +264,24 @@ begin
 end;
 
 { TComputeAlgorithmsOpenCLImpl }
+
+function TComputeAlgorithmsOpenCLImpl.AllocDeviceBuffer(
+  const Size: UInt64; const InitialData: pointer): Buffer;
+var
+  buf: CLBuffer;
+begin
+  buf := Context.CreateDeviceBuffer(BufferAccessReadWrite, Size, InitialData);
+  result := Buffer.Create(CmdQueue, buf);
+end;
+
+function TComputeAlgorithmsOpenCLImpl.AllocHostBuffer(
+  const Size: UInt64; const InitialData: pointer): Buffer;
+var
+  buf: CLBuffer;
+begin
+  buf := Context.CreateHostBuffer(BufferAccessReadWrite, Size, InitialData);
+  result := Buffer.Create(CmdQueue, buf);
+end;
 
 constructor TComputeAlgorithmsOpenCLImpl.Create;
 begin
@@ -290,6 +409,68 @@ begin
   result := TransformInterleaved(Input, Output, Expression);
 end;
 
+function TComputeAlgorithmsOpenCLImpl.Transform(const InputBuffer,
+  ResultBuffer: Buffer; const Expression: Expr): Future<Buffer>;
+var
+  vectorWidth, vectorSize: UInt32;
+  inputLength, inputSize: UInt64;
+  prog: CLProgram;
+  kernel: CLKernel;
+  kernelSrc: string;
+  kernelGen: IKernelGenerator;
+  workGroupSize: UInt32;
+  globalWorkSize: UInt64;
+  execEvent: CLEvent;
+begin
+  vectorWidth := Max(1, Device.PreferredVectorWidthDouble);
+  inputSize := InputBuffer.Size;
+  inputLength := inputSize div SizeOf(double);
+  vectorSize := SizeOf(double) * vectorWidth;
+
+  if ((inputSize mod vectorSize) <> 0) then
+  begin
+    vectorWidth := 1;
+  end;
+
+  kernelGen := DefaultKernelGenerator(vectorWidth);
+
+  kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
+
+  WriteLn(kernelSrc);
+
+  prog := Context.CreateProgram(kernelSrc);
+  if not prog.Build([Device]) then
+  begin
+    raise Exception.Create('Error building OpenCL kernel:' + #13#10 + prog.BuildLog);
+  end;
+
+  kernel := prog.CreateKernel('transform_double');
+
+  kernel.Arguments[0] := InputBuffer.Buffer;
+  kernel.Arguments[1] := ResultBuffer.Buffer;
+  kernel.Arguments[2] := inputLength;
+
+  workGroupSize := kernel.PreferredWorkgroupSizeMultiple;
+
+  if (workGroupSize = 1) then
+    workGroupSize := kernel.MaxWorkgroupSize;
+
+  if (workGroupSize > 1) then
+  begin
+    globalWorkSize := workGroupSize * UInt32(Ceil(inputSize / (SizeOf(double) * workGroupSize)));
+  end
+  else
+  begin
+    globalWorkSize := inputLength;
+  end;
+
+  // don't exec kernel until previous write has been done
+  execEvent := CmdQueue.Enqueue1DRangeKernel(kernel, Range1D(0), Range1D(globalWorkSize), Range1D(workGroupSize), []);
+
+  // wait for last read
+  result := TOpenCLFutureImpl<Buffer>.Create(Context, execEvent, ResultBuffer);
+end;
+
 function TComputeAlgorithmsOpenCLImpl.TransformInterleaved(const Input,
   Output: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
@@ -324,6 +505,8 @@ begin
   kernelGen := DefaultKernelGenerator(vectorWidth);
 
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
+
+  WriteLn(kernelSrc);
 
   prog := Context.CreateProgram(kernelSrc);
   if not prog.Build([Device]) then
@@ -417,6 +600,8 @@ begin
   kernelGen := DefaultKernelGenerator(vectorWidth);
 
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
+
+  WriteLn(kernelSrc);
 
   prog := Context.CreateProgram(kernelSrc);
   if not prog.Build([Device]) then

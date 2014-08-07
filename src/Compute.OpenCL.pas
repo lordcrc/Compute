@@ -287,6 +287,8 @@ type
     ///	</returns>
     class operator Implicit(const EventImpl: Compute.OpenCL.Detail.ICLEvent): CLEvent;
 
+    procedure Wait;
+
     property CommandType: CLCommandType read GetCommandType;
     property CommandExecutionStatus: CLCommandExecutionStatus read GetCommandExecutionStatus;
   end;
@@ -860,6 +862,11 @@ class operator CLEvent.Implicit(
   const EventImpl: Compute.OpenCL.Detail.ICLEvent): CLEvent;
 begin
   result.FEvent := EventImpl;
+end;
+
+procedure CLEvent.Wait;
+begin
+  Event.Wait;
 end;
 
 { CLUserEvent }

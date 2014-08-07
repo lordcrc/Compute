@@ -11,7 +11,8 @@ uses
   System.DateUtils,
   Compute,
   Compute.Future,
-  Compute.Functions;
+  Compute.Functions,
+  Compute.ExprTrees;
 
 function ReferenceTransform(const Input: TArray<double>): TArray<double>;
 var
@@ -53,13 +54,14 @@ var
   input, output, outputRef: TArray<double>;
   f: Future<TArray<double>>;
   P10: Expr;
+  sqr: Expr.Func1;
 begin
   // load OpenCL platform
   InitializeCompute;
 
 
   // initialize input
-  SetLength(input, 200000000);
+  SetLength(input, 2000000);
 
   // input values are in [-1, 1]
   for i := 0 to High(input) do
@@ -69,10 +71,12 @@ begin
   WriteLn('start compute');
   st := Now;
 
+  sqr := Func.Sqr;
+
   // Legendre polynomial P_n(x) for n = 10
   P10 :=
     (1 / 256) *
-    (((((46189 * _1*_1) - 109395) * _1*_1 + 90090) * _1*_1 - 30030) * _1*_1 + 3465) * _1*_1 - 63;
+    (((((46189 * sqr(_1)) - 109395) * sqr(_1) + 90090) * sqr(_1) - 30030) * sqr(_1) + 3465) * sqr(_1) - 63;
 
   // computes output[i] := P10(input[i])
   // by default it tries to select a GPU device
@@ -100,9 +104,71 @@ begin
     WriteLn('======== DATA DIFFERS ========');
 end;
 
+procedure AsyncTransformBufferTest;
+var
+  st: TDateTime;
+  i: integer;
+  input, output, outputRef: TArray<double>;
+  inputBuf: Buffer;
+  f: Future<Buffer>;
+  P10: Expr;
+  sqr: Expr.Func1;
+begin
+  // load OpenCL platform
+  InitializeCompute;
+
+
+  // initialize input
+  SetLength(input, 2000000);
+
+  // input values are in [-1, 1]
+  for i := 0 to High(input) do
+    input[i] := 2 * i / High(input) - 1;
+
+
+  WriteLn('start compute');
+  st := Now;
+
+  sqr := Func.Sqr;
+
+  // Legendre polynomial P_n(x) for n = 10
+  P10 :=
+    (1 / 256) *
+    (((((46189 * sqr(_1)) - 109395) * sqr(_1) + 90090) * sqr(_1) - 30030) * sqr(_1) + 3465) * sqr(_1) - 63;
+
+  // initialize buffer
+  inputBuf := NewBuffer(input);
+
+  // computes output[i] := P10(input[i])
+  // by default it tries to select a GPU device
+  // so this can run async while the CPU does other things
+  f := Compute.AsyncTransform(inputBuf, P10);
+
+  // wait for computations to finish
+  f.Wait;
+  // and get the result
+  output := f.Value.ToArray();
+
+  WriteLn(Format('done compute, %.3f seconds', [MilliSecondsBetween(Now, st) / 1000]));
+
+
+  WriteLn('start reference');
+  st := Now;
+
+  outputRef := ReferenceTransform(input);
+
+  WriteLn(Format('done reference, %.3f seconds', [MilliSecondsBetween(Now, st) / 1000]));
+
+  if CompareOutputs(output, outputRef) then
+    WriteLn('data matches')
+  else
+    WriteLn('======== DATA DIFFERS ========');
+end;
+
 procedure RunTests;
 begin
   AsyncTransformTest;
+  AsyncTransformBufferTest;
 end;
 
 end.

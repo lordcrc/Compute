@@ -323,6 +323,8 @@ type
 
     procedure SetEventCallback(const CallbackProc: TCLEventCallback; const CommandExecutionStatus: TCL_int; const UserData: pointer);
 
+    procedure Wait;
+
     property Handle: TCLEventHandle read GetHandle;
     property CommandType: TCL_command_type read GetCommandType;
     property CommandExecutionStatus: TCL_int read GetCommandExecutionStatus;
@@ -355,6 +357,7 @@ type
     function GetCommandExecutionStatus: TCL_int;
     procedure SetEventCallback(const CallbackProc: TCLEventCallback; const CommandExecutionStatus: TCL_int; const UserData: pointer);
     procedure SetCommandExecutionStatus(const Value: TCL_int);
+    procedure Wait;
   end;
 
   TCLBinaries = TArray<TBytes>;
@@ -1371,6 +1374,14 @@ begin
 //  FUserData := UserData;
 //
 //  Status := clSetEventCallback(FEvent, CommandExecutionStatus, @EventCallbackHandler, Self);
+end;
+
+procedure TCLEventImpl.Wait;
+var
+  e: TArray<TCLEventHandle>;
+begin
+  e := GetEventHandles([Self]);
+  Status := clWaitForEvents(1, PPCL_event(e));
 end;
 
 { TCLProgramImpl }
