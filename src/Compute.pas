@@ -20,7 +20,7 @@ uses
   Compute.Common,
   Compute.ExprTrees,
   Compute.OpenCL,
-  Compute.Future;
+  Compute.Future.Detail;
 
 type
   Expr = Compute.ExprTrees.Expr;
@@ -41,6 +41,22 @@ type
     function ToArray: TArray<double>;
 
     property Size: UInt64 read GetSize;
+  end;
+
+  Future<T> = record
+  strict private
+    FImpl: IFuture<T>;
+    function GetDone: boolean;
+    function GetValue: T;
+  private
+    property Impl: IFuture<T> read FImpl;
+  public
+    class operator Implicit(const Impl: IFuture<T>): Future<T>;
+
+    procedure Wait;
+
+    property Done: boolean read GetDone;
+    property Value: T read GetValue;
   end;
 
 function Constant(const Value: double): Expr.Constant;
@@ -67,7 +83,7 @@ implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.Math,
-  Compute.OpenCL.KernelGenerator, Compute.Future.Detail;
+  Compute.OpenCL.KernelGenerator;
 
 function Constant(const Value: double): Expr.Constant;
 begin
@@ -128,6 +144,27 @@ begin
   FCmdQueue.EnqueueReadBuffer(FBuffer, BufferCommandBlocking, 0, len * SizeOf(double), result, []);
 end;
 
+{ Future<T> }
+
+function Future<T>.GetDone: boolean;
+begin
+  result := Impl.Done;
+end;
+
+function Future<T>.GetValue: T;
+begin
+  result := Impl.Value;
+end;
+
+class operator Future<T>.Implicit(const Impl: IFuture<T>): Future<T>;
+begin
+  result.FImpl := Impl;
+end;
+
+procedure Future<T>.Wait;
+begin
+  Impl.Wait;
+end;
 
 type
   IComputeAlgorithms = interface
