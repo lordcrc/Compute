@@ -162,7 +162,7 @@ type
   public
     class function Map<T, R>(const Input: array of T; const Func: Func1<T, R>): TArray<R>; overload; static;
     class function Reduce<T>(const Input: array of T; const Func: Func2<T, T, T>): T; overload; static;
-    class function Reduce<T>(const Input: array of T; const Func: Func2<T, T, T>; const InitialValue: T): T; overload; static;
+    class function Reduce<T>(const Input: array of T; const InitialValue: T; const Func: Func2<T, T, T>): T; overload; static;
   end;
 
 function StringListToStr(const Lines: IList<string>): string;
@@ -435,11 +435,11 @@ end;
 class function Functional.Reduce<T>(const Input: array of T;
   const Func: Func2<T, T, T>): T;
 begin
-  result := Reduce<T>(Input, Func, Default(T));
+  result := Reduce<T>(Input, Default(T), Func);
 end;
 
 class function Functional.Reduce<T>(const Input: array of T;
-  const Func: Func2<T, T, T>; const InitialValue: T): T;
+  const InitialValue: T; const Func: Func2<T, T, T>): T;
 var
   i: integer;
 begin
