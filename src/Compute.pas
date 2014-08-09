@@ -33,8 +33,6 @@ type
     function GetNumElements: UInt64;
     function GetSize: UInt64;
   private
-    class function Create(const CmdQueue: Compute.OpenCL.CLCommandQueue; const Buf: Compute.OpenCL.CLBuffer): Buffer<T>; overload; static;
-
     property CmdQueue: Compute.OpenCL.CLCommandQueue read FCmdQueue;
     property Buffer: Compute.OpenCL.CLBuffer read FBuffer;
   public
@@ -200,29 +198,19 @@ end;
 
 { Buffer<T> }
 
-class function Buffer<T>.Create(const CmdQueue: Compute.OpenCL.CLCommandQueue;
-  const Buf: Compute.OpenCL.CLBuffer): Buffer<T>;
-begin
-  result.FCmdQueue := CmdQueue;
-  result.FBuffer := Buf;
-end;
-
 class function Buffer<T>.Create(const NumElements: UInt64): Buffer<T>;
-var
-  buf: CLBuffer;
 begin
-  buf := Algorithms.Context.CreateHostBuffer(BufferAccessReadWrite, SizeOf(T) * NumElements);
-  result := Buffer<T>.Create(Algorithms.CmdQueue, buf);
+  result.FCmdQueue := Algorithms.CmdQueue;
+  result.FBuffer := Algorithms.Context.CreateHostBuffer(BufferAccessReadWrite, SizeOf(T) * NumElements);
 end;
 
 class function Buffer<T>.Create(const InitialData: TArray<T>): Buffer<T>;
 var
   size: UInt64;
-  buf: CLBuffer;
 begin
   size := SizeOf(T) * Length(InitialData);
-  buf := Algorithms.Context.CreateHostBuffer(BufferAccessReadWrite, size, InitialData);
-  result := Buffer<T>.Create(Algorithms.CmdQueue, buf);
+  result.FCmdQueue := Algorithms.CmdQueue;
+  result.FBuffer := Algorithms.Context.CreateHostBuffer(BufferAccessReadWrite, size, InitialData);
 end;
 
 function Buffer<T>.GetNumElements: UInt64;
