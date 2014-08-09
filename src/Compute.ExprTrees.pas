@@ -250,6 +250,7 @@ type
       private
         class function Create(const Name: string; const Body, Param: Expr): NaryFunc; overload; static;
         class function Create(const Name: string; const Body, Param1, Param2: Expr): NaryFunc; overload; static;
+        class function Create(const Name: string; const Body, Param1, Param2, Param3: Expr): NaryFunc; overload; static;
         function GetBody: Expr;
         function GetParam(const Index: integer): Expr;
         function GetIsBuiltIn: boolean;
@@ -361,6 +362,7 @@ type
 
       Func1 = reference to function(const Param: Expr): NaryFunc;
       Func2 = reference to function(const Param1, Param2: Expr): NaryFunc;
+      Func3 = reference to function(const Param1, Param2, Param3: Expr): NaryFunc;
 
       LambdaParam = record
       strict private
@@ -686,8 +688,10 @@ function Variable(const Name: string): Expr.Variable;
 function ArrayVariable(const Name: string; const Count: integer): Expr.ArrayVariable;
 function Func1(const Name: string; const FuncBody: Expr): Expr.Func1;
 function Func2(const Name: string; const FuncBody: Expr): Expr.Func2;
+function Func3(const Name: string; const FuncBody: Expr): Expr.Func3;
 function _1: Expr.LambdaParam;
 function _2: Expr.LambdaParam;
+function _3: Expr.LambdaParam;
 
 procedure PrintExpr(const e: Expr);
 
@@ -734,6 +738,15 @@ begin
     end;
 end;
 
+function Func3(const Name: string; const FuncBody: Expr): Expr.Func3;
+begin
+  result :=
+    function(const Param1, Param2, Param3: Expr): Expr.NaryFunc
+    begin
+      result := Expr.NaryFunc.Create(Name, FuncBody, Param1, Param2, Param3);
+    end;
+end;
+
 function _1: Expr.LambdaParam;
 begin
   result := Expr.LambdaParam.Create('_1');
@@ -742,6 +755,11 @@ end;
 function _2: Expr.LambdaParam;
 begin
   result := Expr.LambdaParam.Create('_2');
+end;
+
+function _3: Expr.LambdaParam;
+begin
+  result := Expr.LambdaParam.Create('_3');
 end;
 
 type
@@ -1410,6 +1428,19 @@ begin
   result.FParams[1] := Param2;
 end;
 
+class function Expr.NaryFunc.Create(const Name: string; const Body, Param1,
+  Param2, Param3: Expr): NaryFunc;
+begin
+  result.FName := Name;
+  SetLength(result.FBody, 1);
+  result.FBody[0] := Body;
+  result.FParamCount := 3;
+  SetLength(result.FParams, result.FParamCount);
+  result.FParams[0] := Param1;
+  result.FParams[1] := Param2;
+  result.FParams[2] := Param3;
+end;
+
 function Expr.NaryFunc.GetBody: Expr;
 begin
   result := FBody[0];
@@ -1849,7 +1880,6 @@ class operator Expr.NaryFunc.BitwiseOr(const Value1, Value2: Expr.NaryFunc): Exp
 begin
   result := Expr(Value1) or Expr(Value2);
 end;
-
 
 { Expr.LambdaParam }
 
