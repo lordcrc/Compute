@@ -25,7 +25,7 @@ type
 
     // return kernel with signature
     // transform(double* src, double* res, uint count)
-    function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr): string;
+    function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr; const NumInputs: integer = 1): string;
   end;
 
 function DefaultKernelGenerator(const VectorWidth: UInt32 = 0): IKernelGenerator;
@@ -108,9 +108,9 @@ type
   strict private
     FVectorWidth: UInt32;
 
-    procedure GenerateUserFunctions(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList);
+    procedure GenerateUserFunctions(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList; const DataType: string);
 
-    function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr): string;
+    function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr; const NumInputs: integer): string;
   protected
     procedure GenerateDoubleTransformKernelBody(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList); virtual; abstract;
 
@@ -330,11 +330,12 @@ begin
 end;
 
 function TKernelGeneratorBase.GenerateDoubleTransformKernel(
-  const Expression: Compute.ExprTrees.Expr): string;
+  const Expression: Compute.ExprTrees.Expr; const NumInputs: integer): string;
 var
   dataType, getIdx: string;
   logWidth: integer;
   lines: IStringList;
+  i: integer;
 begin
   lines := TStringListImpl.Create;
 
@@ -353,10 +354,11 @@ begin
   lines.Add('#pragma OPENCL EXTENSION cl_khr_fp64 : enable');
   lines.Add('');
 
-  GenerateUserFunctions(Expression, lines);
+  GenerateUserFunctions(Expression, lines, dataType);
 
-  lines.Add('__kernel void transform_double(');
-  lines.Add('  __global const ' + dataType + '* src,');
+  lines.Add('__kernel void transform_double_' + IntToStr(NumInputs) +'(');
+  for i := 1 to NumInputs do
+    lines.Add('  __global const ' + dataType + '* src_' + IntToStr(i) + ',');
   lines.Add('  __global ' + dataType + '* res,');
   lines.Add('  const unsigned long num)');
   lines.Add('{');
@@ -364,7 +366,8 @@ begin
   lines.Add('  if (gid >= num)');
   lines.Add('    return;');
   lines.Add('  const size_t idx = ' + getIdx + ';');
-  lines.Add('  const ' + dataType + ' src_value = src[idx];');
+  for i := 1 to NumInputs do
+    lines.Add('  const ' + dataType + ' src_value_' + IntToStr(i) + ' = src_' + IntToStr(i) + '[idx];');
 
   GenerateDoubleTransformKernelBody(Expression, lines);
 
@@ -374,7 +377,8 @@ begin
 end;
 
 procedure TKernelGeneratorBase.GenerateUserFunctions(
-  const Expression: Compute.ExprTrees.Expr; const Lines: IStringList);
+  const Expression: Compute.ExprTrees.Expr; const Lines: IStringList;
+  const DataType: string);
 var
   visitor: IExprNodeVisitor;
   fcol: IExprFunctionCollector;
@@ -397,12 +401,12 @@ begin
 
   for f in funcs do
   begin
-    s := 'double ' + f.Name + '(';
+    s := DataType + ' ' + f.Name + '(';
     for i := 1 to f.ParamCount do
     begin
       if i > 1 then
         s := s + ', ';
-      s := s + 'double _' + IntToStr(i);
+      s := s + DataType + ' _' + IntToStr(i);
     end;
     s := s + ')';
     lines.Add(s);
@@ -452,7 +456,7 @@ end;
 
 procedure TGPUTransformKernelGenerator.Visit(const Node: ILambdaParamNode);
 begin
-  Emit('src_value');
+  Emit('src_value' + Node.Data.Name);
 end;
 
 procedure TGPUTransformKernelGenerator.Visit(const Node: IArrayElementNode);

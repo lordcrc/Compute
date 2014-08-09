@@ -850,7 +850,10 @@ end;
 
 function CLEvent.GetCommandExecutionStatus: CLCommandExecutionStatus;
 begin
-  result := MapCommandExecutionStatus(Event.CommandExecutionStatus);
+  if (Event = nil) then
+    result := ExecutionStatusComplete
+  else
+    result := MapCommandExecutionStatus(Event.CommandExecutionStatus);
 end;
 
 function CLEvent.GetCommandType: CLCommandType;
@@ -866,6 +869,9 @@ end;
 
 procedure CLEvent.Wait;
 begin
+  if (Event = nil) then
+    exit;
+
   Event.Wait;
 end;
 

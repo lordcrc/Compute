@@ -20,8 +20,8 @@ uses
   Compute.Test in 'Compute.Test.pas',
   Compute in '..\src\Compute.pas',
   Compute.OpenCL.KernelGenerator in '..\src\Compute.OpenCL.KernelGenerator.pas',
-  Compute.Future in '..\src\Compute.Future.pas',
-  Compute.Future.Detail in '..\src\Compute.Future.Detail.pas';
+  Compute.Future.Detail in '..\src\Compute.Future.Detail.pas',
+  Compute.Detail in '..\src\Compute.Detail.pas';
 
 begin
   try
