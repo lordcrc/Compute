@@ -1430,7 +1430,7 @@ begin
   inherited Create(LogProc);
 
   src := UnicodeToASCIIBytes(Source);
-  len := Length(src);
+  len := Length(src)-1; // exclude null-byte at end
 
   Log('Program from source');
   FProgram := clCreateProgramWithSource(Context.Handle, 1, PPAnsiChar(@src), @len, @errcode_ret);
