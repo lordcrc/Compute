@@ -52,7 +52,8 @@ type
 
   TExprFunctionCollector = class(TInterfacedObject, IExprFunctionCollector, IExprNodeVisitor)
   private
-    FFunctions: IDictionary<string, Expr.NaryFunc>;
+    FFunctions: IList<Expr.NaryFunc>;
+    FKnownFunctions: IDictionary<string, integer>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -100,6 +101,7 @@ type
     function GenerateUserFuncBody(const FuncBody: Compute.ExprTrees.Expr): string;
   protected
     procedure Visit(const Node: IVariableNode); override;
+    procedure Visit(const Node: ILambdaParamNode); override;
   public
     constructor Create;
   end;
@@ -154,7 +156,8 @@ constructor TExprFunctionCollector.Create;
 begin
   inherited Create;
 
-  FFunctions := TDictionaryImpl<string, Expr.NaryFunc>.Create;
+  FFunctions := TListImpl<Expr.NaryFunc>.Create;
+  FKnownFunctions := TDictionaryImpl<string, integer>.Create;
 end;
 
 destructor TExprFunctionCollector.Destroy;
@@ -164,7 +167,7 @@ end;
 
 function TExprFunctionCollector.GetFunctions: TArray<Expr.NaryFunc>;
 begin
-  result := FFunctions.Values;
+  result := FFunctions.ToArray();
 end;
 
 procedure TExprFunctionCollector.Visit(const Node: IUnaryOpNode);
@@ -179,9 +182,27 @@ begin
 end;
 
 procedure TExprFunctionCollector.Visit(const Node: IFuncNode);
+var
+  i: integer;
 begin
-  if not Node.Data.IsBuiltIn then
-    FFunctions[Node.Data.Name] := Node.Data;
+  if Node.Data.IsBuiltIn then
+    exit;
+
+  // make sure functions referenced
+  for i := 0 to Node.Data.ParamCount-1 do
+    Node.Data.Params[i].Accept(Self);
+
+  if FKnownFunctions.Contains[Node.Data.Name] then
+    exit;
+
+  // go through body, adding any functions referenced there
+  // but make sure we don't recurse
+  FKnownFunctions[Node.Data.Name] := 1;
+
+  Node.Data.Body.Accept(Self);
+
+  // add current function after any referenced
+  FFunctions.Add(Node.Data);
 end;
 
 procedure TExprFunctionCollector.Visit(const Node: IArrayElementNode);
@@ -315,6 +336,11 @@ begin
   result := Output;
 end;
 
+procedure TUserFuncBodyGenerator.Visit(const Node: ILambdaParamNode);
+begin
+  Emit('arg' + Node.Data.Name);
+end;
+
 procedure TUserFuncBodyGenerator.Visit(const Node: IVariableNode);
 begin
   raise ENotImplemented.Create('Variables in functions not implemented');
@@ -356,7 +382,9 @@ begin
 
   GenerateUserFunctions(Expression, lines, dataType);
 
-  lines.Add('__kernel void transform_double_' + IntToStr(NumInputs) +'(');
+  lines.Add('__kernel');
+  lines.Add('__attribute__((vec_type_hint(' + dataType + ')))');
+  lines.Add('void transform_double_' + IntToStr(NumInputs) +'(');
   for i := 1 to NumInputs do
     lines.Add('  __global const ' + dataType + '* src_' + IntToStr(i) + ',');
   lines.Add('  __global ' + dataType + '* res,');
@@ -406,7 +434,7 @@ begin
     begin
       if i > 1 then
         s := s + ', ';
-      s := s + DataType + ' _' + IntToStr(i);
+      s := s + DataType + ' arg_' + IntToStr(i);
     end;
     s := s + ')';
     lines.Add(s);
