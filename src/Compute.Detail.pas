@@ -54,6 +54,7 @@ type
     FCmdQueue: CLCommandQueue;
     FMemReadQueue: CLCommandQueue;
     FMemWriteQueue: CLCommandQueue;
+    FKernelCache: IDictionary<string, CLKernel>;
 
     function DeviceOptimalNonInterleavedBufferSize: UInt64;
     function DeviceOptimalInterleavedBufferSize: UInt64;
@@ -234,7 +235,11 @@ begin
   FContext := plat.CreateContext([FDevice]);
   FCmdQueue := FContext.CreateCommandQueue(FDevice);
   FMemReadQueue := FContext.CreateCommandQueue(FDevice);
-  FMemWriteQueue := FContext.CreateCommandQueue(FDevice);
+  // AMD dev suggests using two queues only (exec/mem), Intel is broken with separate read/write queues
+  // so for now, use same queue for read/write
+  //FMemWriteQueue := FContext.CreateCommandQueue(FDevice);
+  FMemWriteQueue := FMemReadQueue;
+  FKernelCache := TDictionaryImpl<string, CLKernel>.Create;
 end;
 
 function TComputeAlgorithmsOpenCLImpl.Transform(const Input,
@@ -475,7 +480,8 @@ var
   i: UInt32;
 begin
   numInputs := Length(InputBuffers);
-  vectorWidth := Max(1, Device.PreferredVectorWidthDouble);
+  //vectorWidth := Max(1, Device.PreferredVectorWidthDouble);
+  vectorWidth := 1; // seems AMD's OpenCL compiler isn't too keen on vectorized doubles
   inputSize := NumElements * SizeOf(double);
   inputLength := NumElements;
   vectorSize := SizeOf(double) * vectorWidth;
@@ -491,15 +497,25 @@ begin
 
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression, numInputs);
 
-  WriteLn(kernelSrc);
-
-  prog := Context.CreateProgram(kernelSrc);
-  if not prog.Build([Device]) then
+  if not FKernelCache.Contains[kernelSrc] then
   begin
-    raise Exception.Create('Error building OpenCL kernel:' + #13#10 + prog.BuildLog);
-  end;
+    WriteLn(kernelSrc);
 
-  kernel := prog.CreateKernel('transform_double_' + IntToStr(numInputs));
+    prog := Context.CreateProgram(kernelSrc);
+    if not prog.Build([Device]) then
+    begin
+      raise Exception.Create('Error building OpenCL kernel:' + #13#10 + prog.BuildLog);
+    end;
+
+    WriteLn(prog.BuildLog);
+
+    kernel := prog.CreateKernel('transform_double_' + IntToStr(numInputs));
+    FKernelCache[kernelSrc] := kernel;
+  end
+  else
+  begin
+    kernel := FKernelCache[kernelSrc];
+  end;
 
   for i := 0 to numInputs-1 do
   begin
