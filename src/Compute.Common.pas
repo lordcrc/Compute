@@ -153,6 +153,18 @@ type
     property Status: TCLStatus read FStatus;
   end;
 
+  Functional = record
+  public
+    type
+      Func1<T, R> = reference to function(const Arg1: T): R;
+      Func2<T1, T2, R> = reference to function(const Arg1: T1; const Arg2: T2): R;
+      Func3<T1, T2, T3, R> = reference to function(const Arg1: T1; const Arg2: T2; const Arg3: T3): R;
+  public
+    class function Map<T, R>(const Input: array of T; const Func: Func1<T, R>): TArray<R>; overload; static;
+    class function Reduce<T>(const Input: array of T; const Func: Func2<T, T, T>): T; overload; static;
+    class function Reduce<T>(const Input: array of T; const Func: Func2<T, T, T>; const InitialValue: T): T; overload; static;
+  end;
+
 function StringListToStr(const Lines: IList<string>): string;
 
 function CeilU(const v: double): UInt64;
@@ -406,6 +418,34 @@ var
 begin
   msg := cl.StatusToStr(Status);
   inherited Create(msg);
+end;
+
+{ Functional }
+
+class function Functional.Map<T, R>(const Input: array of T;
+  const Func: Func1<T, R>): TArray<R>;
+var
+  i: integer;
+begin
+  SetLength(result, Length(Input));
+  for i := 0 to High(Input) do
+    result[i] := Func(Input[i]);
+end;
+
+class function Functional.Reduce<T>(const Input: array of T;
+  const Func: Func2<T, T, T>): T;
+begin
+  result := Reduce<T>(Input, Func, Default(T));
+end;
+
+class function Functional.Reduce<T>(const Input: array of T;
+  const Func: Func2<T, T, T>; const InitialValue: T): T;
+var
+  i: integer;
+begin
+  result := InitialValue;
+  for i := 0 to High(Input) do
+    result := Func(result, Input[i]);
 end;
 
 end.
