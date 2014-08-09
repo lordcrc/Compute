@@ -175,14 +175,13 @@ var
   rho_c: TArray<double>;
   i: integer;
   // state
-  x: Buffer<double>; // r
-  y0, dy0: Buffer<double>; // m
-  y0t: Buffer<double>; // temp
-  y1, dy1: Buffer<double>; // rho
-  y1t: Buffer<double>; // temp
-  fx: Future<Buffer<double>>;
-  fy0, fdy0: Future<Buffer<double>>;
-  fy1, fdy1: Future<Buffer<double>>;
+  x: Future<Buffer<double>>; // r
+  y0, dy0: Future<Buffer<double>>; // m
+  y0t: Future<Buffer<double>>; // temp
+  y1, dy1: Future<Buffer<double>>; // rho
+  y1t: Future<Buffer<double>>; // temp
+
+  radius: TArray<double>;
 begin
   // load OpenCL platform
   InitializeCompute;
@@ -215,7 +214,7 @@ begin
   x := Buffer<double>.Create(N);
 
   // simply fill with r0
-  fx := AsyncTransform(x, r0);
+  x := AsyncTransform(x, x, r0);
 
   // compute initial state from rho_c
   y0 := Buffer<double>.Create(rho_c);
@@ -228,20 +227,31 @@ begin
   y1t := Buffer<double>.Create(N);
 
   // y0 = rho_c * r*r*r / 3;
-  fy0 := AsyncTransform(y0, _1 * r0 * r0 * r0 / 3.0);
+  y0 := AsyncTransform(y0, y0, _1 * r0 * r0 * r0 / 3);
   // y1 = (gamma(rho_c) * rho_c) / (gamma(rho_c) + r*r * rho_c / 3)
-  fy1 := AsyncTransform(y1, (gamma(_1) * _1) / (gamma(_1) + r0 * r0 * _1 / 3));
+  y1 := AsyncTransform(y1, y1, (gamma(_1) * _1) / (gamma(_1) + r0 * r0 * _1 / 3));
 
   // get derivatives
-  fdy0 := AsyncTransform(fx, fy0, fy1, dy0, dy0dx(_1, _2, _3));
-  fdy1 := AsyncTransform(fx, fy0, fy1, dy1, dy1dx(_1, _2, _3));
+  dy0 := AsyncTransform(x, y0, y1, dy0, dy0dx(_1, _2, _3));
+  dy1 := AsyncTransform(x, y0, y1, dy1, dy1dx(_1, _2, _3));
+
+  // integration step
+  y0t := AsyncTransform(y0, dy0, y0t, _1 + h * _2); // yt = y + h*dydx
+  y1t := AsyncTransform(y1, dy1, y1t, _1 + h * _2); // yt = y + h*dydx
+
+  // y0t holds new values and y0 is ready
+  // so swap them for next round
+  y0t.SwapWith(y0);
+  y1t.SwapWith(y1);
+
+  radius := y0.Value.ToArray();
 end;
 
 procedure RunTests;
 begin
-  AsyncTransformTest;
-  AsyncTransformBufferTest;
-//  ODETest;
+//  AsyncTransformTest;
+//  AsyncTransformBufferTest;
+  ODETest;
 end;
 
 end.

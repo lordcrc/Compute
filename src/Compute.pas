@@ -64,6 +64,10 @@ type
     property Impl: IFuture<T> read FImpl;
   public
     class operator Implicit(const Impl: IFuture<T>): Future<T>;
+    // makes a ready-future
+    class operator Implicit(const Value: T): Future<T>;
+
+    procedure SwapWith(var OtherFuture: Future<T>);
 
     procedure Wait;
 
@@ -84,25 +88,14 @@ function _3: Expr.LambdaParam;
 procedure InitializeCompute;
 
 function AsyncTransform(const InputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-// the output buffer is returned in the future
-function AsyncTransform(const InputBuffer, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
 // queues the async transform to execute as soon as the input buffer is ready, output buffer is returned in the future
-function AsyncTransform(const InputBuffer: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
+function AsyncTransform(const InputBuffer, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>; overload;
 
 // two inputs
-function AsyncTransform(const InputBuffer1, InputBuffer2, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1: Future<Buffer<double>>; const InputBuffer2, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1, InputBuffer2: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
+function AsyncTransform(const InputBuffer1, InputBuffer2, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>; overload;
 
 // three inputs
-function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1: Future<Buffer<double>>; const InputBuffer2, InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2: Future<Buffer<double>>; const InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1, InputBuffer2: Buffer<double>; const InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1, InputBuffer2: Future<Buffer<double>>; const InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2, InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
-function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
+function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>; overload;
 
 
 function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>; overload;
@@ -174,6 +167,20 @@ end;
 function Future<T>.GetValue: T;
 begin
   result := Impl.Value;
+end;
+
+class operator Future<T>.Implicit(const Value: T): Future<T>;
+begin
+  result := CreateReady(Value);
+end;
+
+procedure Future<T>.SwapWith(var OtherFuture: Future<T>);
+var
+  f: IFuture<T>;
+begin
+  f := OtherFuture.FImpl;
+  OtherFuture.FImpl := FImpl;
+  FImpl := f;
 end;
 
 class operator Future<T>.Implicit(const Impl: IFuture<T>): Future<T>;
@@ -269,19 +276,6 @@ begin
   result := AsyncTransform(InputBuffer, outputBuffer, Expression);
 end;
 
-function AsyncTransform(const InputBuffer, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer);
-  result := Algorithms.Transform(readyInputBuffer, 0, InputBuffer.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-begin
-  result := Algorithms.Transform(InputBuffer.Impl, 0, InputBuffer.Impl.PeekValue.NumElements, OutputBuffer, Expression);
-end;
-
 function AsyncTransform(const Input: TArray<double>; const Expression: Expr): Future<TArray<double>>;
 var
   output: TArray<double>;
@@ -299,92 +293,19 @@ begin
   result := f.Value;
 end;
 
-function AsyncTransform(const InputBuffer1, InputBuffer2, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1, readyInputBuffer2: IFuture<Buffer<double>>;
+function AsyncTransform(const InputBuffer, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>;
 begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  readyInputBuffer2 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer2);
-  result := Algorithms.Transform([readyInputBuffer1, readyInputBuffer2], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
+  result := Algorithms.Transform(InputBuffer.Impl, 0, InputBuffer.Impl.PeekValue.NumElements, OutputBuffer.Impl, Expression);
 end;
 
-function AsyncTransform(const InputBuffer1: Future<Buffer<double>>; const InputBuffer2, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer2: IFuture<Buffer<double>>;
+function AsyncTransform(const InputBuffer1, InputBuffer2, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>;
 begin
-  readyInputBuffer2 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer2);
-  result := Algorithms.Transform([InputBuffer1.Impl, readyInputBuffer2], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer, Expression);
+  result := Algorithms.Transform([InputBuffer1.Impl, InputBuffer2.Impl], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer.Impl, Expression);
 end;
 
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1: IFuture<Buffer<double>>;
+function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3, OutputBuffer: Future<Buffer<double>>; const Expression: Expr): Future<Buffer<double>>;
 begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  result := Algorithms.Transform([readyInputBuffer1, InputBuffer2.Impl], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1, InputBuffer2: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-begin
-  result := Algorithms.Transform([InputBuffer1.Impl, InputBuffer2.Impl], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1, readyInputBuffer2, readyInputBuffer3: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  readyInputBuffer2 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer2);
-  readyInputBuffer3 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer3);
-  result := Algorithms.Transform([readyInputBuffer1, readyInputBuffer2, readyInputBuffer3], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1: Future<Buffer<double>>; const InputBuffer2, InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer2, readyInputBuffer3: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer2 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer2);
-  readyInputBuffer3 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer3);
-  result := Algorithms.Transform([InputBuffer1.Impl, readyInputBuffer2, readyInputBuffer3], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2: Future<Buffer<double>>; const InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1, readyInputBuffer3: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  readyInputBuffer3 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer3);
-  result := Algorithms.Transform([readyInputBuffer1, InputBuffer2.Impl, readyInputBuffer3], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1, InputBuffer2: Buffer<double>; const InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1, readyInputBuffer2: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  readyInputBuffer2 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer2);
-  result := Algorithms.Transform([readyInputBuffer1, readyInputBuffer2, InputBuffer3.Impl], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1, InputBuffer2: Future<Buffer<double>>; const InputBuffer3, OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer3: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer3 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer3);
-  result := Algorithms.Transform([InputBuffer1.Impl, InputBuffer2.Impl, readyInputBuffer3], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1: Buffer<double>; const InputBuffer2, InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-var
-  readyInputBuffer1: IFuture<Buffer<double>>;
-begin
-  readyInputBuffer1 := TReadyFutureImpl<Buffer<double>>.Create(InputBuffer1);
-  result := Algorithms.Transform([readyInputBuffer1, InputBuffer2.Impl, InputBuffer3.Impl], 0, InputBuffer1.NumElements, OutputBuffer, Expression);
-end;
-
-function AsyncTransform(const InputBuffer1, InputBuffer2, InputBuffer3: Future<Buffer<double>>; const OutputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>;
-begin
-  result := Algorithms.Transform([InputBuffer1.Impl, InputBuffer2.Impl, InputBuffer3.Impl], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer, Expression);
+  result := Algorithms.Transform([InputBuffer1.Impl, InputBuffer2.Impl, InputBuffer3.Impl], 0, InputBuffer1.Impl.PeekValue.NumElements, OutputBuffer.Impl, Expression);
 end;
 
 end.

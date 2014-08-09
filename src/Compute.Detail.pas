@@ -29,7 +29,7 @@ type
     procedure Initialize;
 
     function Transform(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
-    function Transform(const InputBuffers: array of IFuture<Buffer<double>>; const FirstElement, NumElements: UInt64; const OutputBuffer: Buffer<double>; const Expression: Expr): IFuture<Buffer<double>>; overload;
+    function Transform(const InputBuffers: array of IFuture<Buffer<double>>; const FirstElement, NumElements: UInt64; const OutputBuffer: IFuture<Buffer<double>>; const Expression: Expr): IFuture<Buffer<double>>; overload;
 
     function GetContext: CLContext;
     function GetCmdQueue: CLCommandQueue;
@@ -67,7 +67,7 @@ type
 
     function Transform(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
 
-    function Transform(const InputBuffers: array of IFuture<Buffer<double>>; const FirstElement, NumElements: UInt64; const OutputBuffer: Buffer<double>; const Expression: Expr): IFuture<Buffer<double>>; overload;
+    function Transform(const InputBuffers: array of IFuture<Buffer<double>>; const FirstElement, NumElements: UInt64; const OutputBuffer: IFuture<Buffer<double>>; const Expression: Expr): IFuture<Buffer<double>>; overload;
 
     function GetContext: CLContext;
     function GetCmdQueue: CLCommandQueue;
@@ -446,9 +446,9 @@ begin
       result := f.PeekValue.NumElements;
     end);
   minNum := Functional.Reduce<UInt64>(numElms,
-    function(const a, b: UInt64): UInt64
+    function(const accumulator, v: UInt64): UInt64
     begin
-      result := Min(a, b);
+      result := IfThen(accumulator = 0, v, Min(accumulator, v));
     end);
 
   if (minNum < NumElements) then
@@ -458,7 +458,8 @@ end;
 function TComputeAlgorithmsOpenCLImpl.Transform(
   const InputBuffers: array of IFuture<Buffer<double>>;
   const FirstElement, NumElements: UInt64;
-  const OutputBuffer: Buffer<double>; const Expression: Expr): IFuture<Buffer<double>>;
+  const OutputBuffer: IFuture<Buffer<double>>;
+  const Expression: Expr): IFuture<Buffer<double>>;
 var
   numInputs: UInt32;
   vectorWidth, vectorSize: UInt32;
@@ -504,7 +505,7 @@ begin
   begin
     kernel.Arguments[i] := InputBuffers[i].PeekValue.Handle;
   end;
-  kernel.Arguments[numInputs+0] := OutputBuffer.Handle;
+  kernel.Arguments[numInputs+0] := OutputBuffer.PeekValue.Handle;
   kernel.Arguments[numInputs+1] := inputLength;
 
   workGroupSize := kernel.PreferredWorkgroupSizeMultiple;
@@ -521,15 +522,16 @@ begin
     globalWorkSize := inputLength;
   end;
 
-  SetLength(inputEvents, numInputs);
+  SetLength(inputEvents, numInputs+1);
   for i := 0 to numInputs-1 do
     inputEvents[i] := InputBuffers[i].Event;
+  inputEvents[numInputs] := OutputBuffer.Event;
 
   // don't exec kernel until buffer is ready
   execEvent := CmdQueue.Enqueue1DRangeKernel(kernel, Range1D(0), Range1D(globalWorkSize), Range1D(workGroupSize), inputEvents);
 
   // wait for last read
-  result := TOpenCLFutureImpl<Buffer<double>>.Create(execEvent, OutputBuffer);
+  result := TOpenCLFutureImpl<Buffer<double>>.Create(execEvent, OutputBuffer.PeekValue);
 end;
 
 end.
