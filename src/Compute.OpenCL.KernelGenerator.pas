@@ -34,7 +34,8 @@ implementation
 
 uses
   System.SysUtils,
-  Compute.Common;
+  Compute.Common,
+  Compute.Functions;
 
 var
   OpenCLFormatSettings: TFormatSettings;
@@ -110,6 +111,7 @@ type
   strict private
     FVectorWidth: UInt32;
 
+    procedure GenerateStandardFunctions(const Lines: IStringList; const DataType: string);
     procedure GenerateUserFunctions(const Expression: Compute.ExprTrees.Expr; const Lines: IStringList; const DataType: string);
 
     function GenerateDoubleTransformKernel(const Expression: Compute.ExprTrees.Expr; const NumInputs: integer): string;
@@ -185,14 +187,14 @@ procedure TExprFunctionCollector.Visit(const Node: IFuncNode);
 var
   i: integer;
 begin
-  if Node.Data.IsBuiltIn then
+  if Node.Data.IsBuiltIn and (Node.Data.Name <> 'ifthen') then
     exit;
 
   // make sure functions referenced
   for i := 0 to Node.Data.ParamCount-1 do
     Node.Data.Params[i].Accept(Self);
 
-  if FKnownFunctions.Contains[Node.Data.Name] then
+  if Node.Data.IsBuiltIn or FKnownFunctions.Contains[Node.Data.Name] then
     exit;
 
   // go through body, adding any functions referenced there
@@ -281,17 +283,31 @@ procedure TExpressionGeneratorBase.Visit(const Node: IFuncNode);
 var
   i: integer;
 begin
-  Emit(Node.Data.Name + '(');
-
-  for i := 0 to Node.Data.ParamCount-1 do
+  // ifthen is special
+  if Node.Data.IsBuiltIn and (Node.Data.Name = 'ifthen') then
   begin
-    if (i > 0) then
-      Emit(', ');
+    Emit('(');
+    Node.Data.Params[0].Accept(Self);
+    Emit(') ? (');
+    Node.Data.Params[1].Accept(Self);
+    Emit(') : (');
+    Node.Data.Params[2].Accept(Self);
+    Emit(')');
+  end
+  else
+  begin
+    Emit(Node.Data.Name + '(');
 
-    Node.Data.Params[i].Accept(Self);
+    for i := 0 to Node.Data.ParamCount-1 do
+    begin
+      if (i > 0) then
+        Emit(', ');
+
+      Node.Data.Params[i].Accept(Self);
+    end;
+
+    Emit(')');
   end;
-
-  Emit(')');
 end;
 
 procedure TExpressionGeneratorBase.Visit(const Node: IBinaryOpNode);
@@ -402,6 +418,12 @@ begin
   lines.Add('}');
 
   result := StringListToStr(lines);
+end;
+
+procedure TKernelGeneratorBase.GenerateStandardFunctions(
+  const Lines: IStringList; const DataType: string);
+begin
+
 end;
 
 procedure TKernelGeneratorBase.GenerateUserFunctions(

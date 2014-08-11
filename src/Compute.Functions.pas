@@ -22,6 +22,7 @@ uses
 type
   Func = record
   strict private
+    class function GetIfThen: Expr.Func3; static;
     class function GetMax: Expr.Func2; static;
     class function GetMin: Expr.Func2; static;
     class function GetPow: Expr.Func2; static;
@@ -29,6 +30,7 @@ type
     class function GetSqr: Expr.Func1; static;
     class function GetSin: Expr.Func1; static;
   public
+    class property IfThen: Expr.Func3 read GetIfThen;
     class property Max: Expr.Func2 read GetMax;
     class property Min: Expr.Func2 read GetMin;
     class property Pow: Expr.Func2 read GetPow;
@@ -40,6 +42,11 @@ type
 implementation
 
 { Func }
+
+class function Func.GetIfThen: Expr.Func3;
+begin
+  result := Func3('ifthen', __BuiltInFuncBody);
+end;
 
 class function Func.GetMax: Expr.Func2;
 begin

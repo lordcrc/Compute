@@ -39,7 +39,7 @@ type
     opAdd, opSub, opMul, opDiv, opAnd, opOr, opXor, opEq, opNotEq, opLess, opLessEq, opGreater, opGreaterEq,
     opNot, opNegate,
     // built-in functions
-    opMax, opMin, opSin, opCos, opSqrt, opPow
+    opIfThen, opMax, opMin, opSin, opCos, opSqrt, opPow
     );
 
   Instruction = record
@@ -313,6 +313,7 @@ type
     procedure OpGreaterEqProc(const Instr: Instruction);
     procedure OpNotProc(const Instr: Instruction);
     procedure OpNegateProc(const Instr: Instruction);
+    procedure OpIfThen(const Instr: Instruction);
     procedure OpMaxProc(const Instr: Instruction);
     procedure OpMinProc(const Instr: Instruction);
     procedure OpSinProc(const Instr: Instruction);
@@ -346,7 +347,7 @@ const
     'load', 'loadind', 'store', 'storeind', 'jump', 'condjump', 'call', 'ret',
     'add', 'sub', 'mul', 'div', 'and', 'or', 'xor', 'eq', 'noteq', 'less', 'lesseq', 'greater', 'greatereq',
     'not', 'negate',
-    'max', 'min',
+    'ifthen', 'max', 'min',
     'sin', 'cos', 'sqrt', 'pow');
 var
   i: integer;
@@ -836,6 +837,7 @@ var
   fbodyLabelId: integer;
   i, maxLambdaParams: integer;
 begin
+  AddBuiltInFunc('ifthen', 3, opIfThen);
   AddBuiltInFunc('max', 2, opMax);
   AddBuiltInFunc('min', 2, opMin);
   AddBuiltInFunc('sin', 1, opSin);
@@ -1344,6 +1346,21 @@ begin
   v2 := _Pop;
   v1 := _Pop;
   r := Ord(v1 > v2);
+  _Push(r);
+  IncIP;
+end;
+
+procedure TVirtualMachineImpl.OpIfThen(const Instr: Instruction);
+var
+  cond, v1, v2, r: double;
+begin
+  v2 := _Pop;
+  v1 := _Pop;
+  cond := _Pop;
+  if (cond <> 0) then
+    r := v1
+  else
+    r := v2;
   _Push(r);
   IncIP;
 end;
