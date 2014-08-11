@@ -11,6 +11,7 @@ uses
   System.DateUtils,
   System.Math,
   Compute,
+  Compute.Common,
   Compute.Functions,
   Compute.ExprTrees;
 
@@ -41,6 +42,7 @@ begin
     begin
       Writeln(Format('%d val %.15g ref %.15g (error: %g)', [i, data1[i], data2[i], err]));
       result := False;
+      exit;
     end;
   end;
 end;
@@ -59,7 +61,7 @@ begin
 
 
   // initialize input
-  SetLength(input, 2000000);
+  SetLength(input, 200000000);
 
   // input values are in [-1, 1]
   for i := 0 to High(input) do
@@ -117,7 +119,7 @@ begin
 
 
   // initialize input
-  SetLength(input, 20000000);
+  SetLength(input, 200000000);
 
   // input values are in [-1, 1]
   for i := 0 to High(input) do
@@ -163,44 +165,165 @@ begin
     WriteLn('======== DATA DIFFERS ========');
 end;
 
+procedure OutputData(const Filename: string; const radius, mass, rho: TArray<double>);
+var
+  i: integer;
+  f: TextFile;
+begin
+  Assign(f, Filename);
+  Rewrite(f);
+  WriteLn(f, 'r'#9'm'#9'rho');
+  for i := 0 to High(radius) do
+    WriteLn(f, Format('%.15g'#9'%.15g'#9'%.15g', [radius[i], mass[i], rho[i]]));
+  CloseFile(f);
+end;
+
+function gamma_ref(const rho: double): double; inline;
+var
+  x2: double;
+begin
+  x2 := Power(rho, 2.0 / 3.0);
+  result := x2 / (3 * sqrt(1 + x2));
+end;
+
+procedure dydx_ref(const x: double; const y0, y1: double; out dy0dx, dy1dx: double);
+var
+  rho: double;
+  x2: double;
+begin
+  x2 := x * x;
+  rho := Max(1e-9, y1);
+
+	dy0dx := x2 * rho; // dm/dr
+	dy1dx := -(y0 * rho) / (gamma_ref(rho) * x2); // drho/dr
+end;
+
+procedure euler_ref(const h, y0, dydx: double; out y: double); inline;
+begin
+  y := y0 + h * dydx;
+end;
+
+procedure ODEReference(const N: integer; const r0, h: double; out radius, mass, rho: TArray<double>);
+var
+  i, j: integer;
+  x, r, rho_c: double;
+  dy0dx, dy1dx: double;
+  y0t, y1t: double;
+  y0, y1: TArray<double>;
+  done: boolean;
+  st, ft: double;
+begin
+  WriteLn;
+  WriteLn('Computing reference');
+
+  radius := nil;
+  SetLength(radius, N);
+  mass := nil;
+  SetLength(mass, N);
+  rho := nil;
+  SetLength(rho, N);
+
+  y0 := mass;
+  y1 := rho;
+
+  // initialize
+  x := r0;
+  for i := 0 to N-1 do
+  begin
+    rho_c := Power(10, -1 + 7 * (i / (N-1)));
+    r := r0;
+
+		y0[i] := rho_c * r*r*r / 3;
+		y1[i] := (gamma_ref(rho_c)*rho_c)/(gamma_ref(rho_c) + r*r*rho_c/3);
+  end;
+
+  st := Now;
+
+  j := 0;
+  done := False;
+  while not done do
+  begin
+    done := True;
+
+    for i := 0 to N-1 do
+    begin
+      if (radius[i] > 0) then
+        continue;
+
+      dydx_ref(x, y0[i], y1[i], dy0dx, dy1dx);
+
+      euler_ref(h, y0[i], dy0dx, y0t);
+      y0[i] := y0t;
+      euler_ref(h, y1[i], dy1dx, y1t);
+
+      if (y1[i] > 1e-9) and (y1t <= 1e-9) then
+      begin
+        radius[i] := x;
+      end;
+
+      y1[i] := y1t;
+
+      done := done and (y1t <= 1e-9);
+    end;
+    x := x + h;
+    j := j + 1;
+  end;
+
+  ft := Now;
+
+  WriteLn(Format('Done, steps: %d, time: %.3fs', [j, MilliSecondsBetween(ft, st) / 1000]));
+end;
+
 procedure ODETest;
 const
-  N = 1000;
+  N = 100000;
   r0 = 1e-9;
   h = 1e-4;
 var
   sqr: Expr.Func1;
-  gamma, gamma_x2, rho: Expr.Func1;
+  ifthen: Expr.Func3;
+  gamma, gamma_x2, get_rho: Expr.Func1;
+  euler: Expr.Func2;
   dy0dx, dy1dx: Expr.Func3;
   rho_c: TArray<double>;
   i: integer;
+  max_rho: double;
   // state
   x: Future<Buffer<double>>; // r
+  xt: Future<Buffer<double>>;
   y0, dy0: Future<Buffer<double>>; // m
   y0t: Future<Buffer<double>>; // temp
   y1, dy1: Future<Buffer<double>>; // rho
   y1t: Future<Buffer<double>>; // temp
 
-  radius: TArray<double>;
+  radius, mass, rho: TArray<double>;
+
+  st, ft: double;
 begin
   // load OpenCL platform
   InitializeCompute;
 
   sqr := Func.Sqr;
+  ifthen := Func.IfThen;
+
+  // euler integration step
+  // _1 = y
+  // _2 = dydx
+  euler := Func2('euler', _1 + h * _2);
 
   // gamma function
   gamma_x2 := Func1('gamma_x2', _1 / (3 * Func.Sqrt(1 + _1)));
   gamma := Func1('gamma', gamma_x2(Func.Pow(_1, 2.0 / 3.0)));
 
   // helper
-  rho := Func1('rho', Func.Max(1e-9, _1));
+  get_rho := Func1('get_rho', Func.Max(1e-9, _1));
 
   // derivative functions
   // _1 = x
   // _2 = y0
   // _3 = y1
-	dy0dx := Func3('dy0dx', sqr(_1) * rho(_3)); // dm/dr
-	dy1dx := Func3('dy1dx', -(_2*rho(_3)) / (gamma(rho(_3))*sqr(_1))); // drho/dr
+  dy0dx := Func3('dy0dx', sqr(_1) * get_rho(_3)); // dm/dr
+  dy1dx := Func3('dy1dx', -(_2 * get_rho(_3)) / (gamma(get_rho(_3)) * sqr(_1))); // drho/dr
 
   SetLength(rho_c, N);
 
@@ -221,6 +344,7 @@ begin
   y1 := Buffer<double>.Create(rho_c);
 
   // temporary buffers
+  xt := Buffer<double>.Create(N);
   dy0 := Buffer<double>.Create(N);
   y0t := Buffer<double>.Create(N);
   dy1 := Buffer<double>.Create(N);
@@ -231,20 +355,55 @@ begin
   // y1 = (gamma(rho_c) * rho_c) / (gamma(rho_c) + r*r * rho_c / 3)
   y1 := AsyncTransform(y1, y1, (gamma(_1) * _1) / (gamma(_1) + r0 * r0 * _1 / 3));
 
-  // get derivatives
-  dy0 := AsyncTransform(x, y0, y1, dy0, dy0dx(_1, _2, _3));
-  dy1 := AsyncTransform(x, y0, y1, dy1, dy1dx(_1, _2, _3));
+  st := Now;
 
-  // integration step
-  y0t := AsyncTransform(y0, dy0, y0t, _1 + h * _2); // yt = y + h*dydx
-  y1t := AsyncTransform(y1, dy1, y1t, _1 + h * _2); // yt = y + h*dydx
+  i := 1;
+  while True do
+  begin
+    // get derivatives
+    dy0 := AsyncTransform(x, y0, y1, dy0, dy0dx(_1, _2, _3));
+    dy1 := AsyncTransform(x, y0, y1, dy1, dy1dx(_1, _2, _3));
 
-  // y0t holds new values and y0 is ready
-  // so swap them for next round
-  y0t.SwapWith(y0);
-  y1t.SwapWith(y1);
+    // integration step
+    y0t := AsyncTransform(y0, y1, dy0, y0t, ifthen(_2 < 1e-9, _1, euler(_1, _3))); // y0t = y0 + h*dy0dx
+    y1t := AsyncTransform(y0, y1, dy1, y1t, ifthen(_2 < 1e-9, _2, euler(_2, _3))); // y1t = y1 + h*dy1dx
+    xt :=  AsyncTransform(x, y1, xt, ifthen(_2 < 1e-9, _1, _1 + h));
 
-  radius := y0.Value.ToArray();
+    // y0t holds new values and y0 is ready
+    // so swap them for next round
+    y0t.SwapWith(y0);
+    y1t.SwapWith(y1);
+    xt.SwapWith(x);
+
+    // every 1000 steps, check if we're done
+    if (i mod 1000 = 0) then
+    begin
+      WriteLn('step: ', i);
+
+      rho := y1.Value.ToArray();
+      max_rho := Functional.Reduce<double>(rho,
+        function(const v1, v2: double): double
+        begin
+          result := Max(v1, v2);
+        end);
+
+      if (max_rho <= 1e-9) then
+        break;
+    end;
+    i := i + 1;
+  end;
+
+  ft := Now;
+
+  WriteLn(Format('Done, steps: %d, time: %.3fs', [i, MilliSecondsBetween(ft, st) / 1000]));
+
+  radius := x.Value.ToArray();
+  mass := y0.Value.ToArray();
+  rho := y1.Value.ToArray();
+  OutputData('data.txt', radius, mass, rho);
+
+  ODEReference(N, r0, h, radius, mass, rho);
+  OutputData('data_ref.txt', radius, mass, rho);
 end;
 
 procedure RunTests;
