@@ -1159,7 +1159,8 @@ begin
   if (cl.OCL_LibHandle = nil) then
   begin
     Log('Initializing OpenCL...');
-    InitOpenCL();
+    if not InitOpenCL() then
+      raise ECLImplNotFound.Create;
   end;
 
   numPlatforms := -1;

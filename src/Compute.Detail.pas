@@ -177,7 +177,7 @@ begin
   plat := platforms[0];
 
   foundDevice := False;
-  if false and (Length(plat.Devices[DeviceTypeGPU]) > 0) then
+  if true and (Length(plat.Devices[DeviceTypeGPU]) > 0) then
   begin
     for dev in plat.Devices[DeviceTypeGPU] do
     begin

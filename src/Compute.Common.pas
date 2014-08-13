@@ -153,6 +153,11 @@ type
     property Status: TCLStatus read FStatus;
   end;
 
+  ECLImplNotFound = class(Exception)
+  public
+    constructor Create;
+  end;
+
   Functional = record
   public
     type
@@ -418,6 +423,13 @@ var
 begin
   msg := cl.StatusToStr(Status);
   inherited Create(msg);
+end;
+
+{ ECLImplNotFound }
+
+constructor ECLImplNotFound.Create;
+begin
+  inherited Create('Failed to initialize OpenCL, run-time not found');
 end;
 
 { Functional }
