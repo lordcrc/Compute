@@ -49,6 +49,7 @@ end;
 
 procedure AsyncTransformTest;
 var
+  logger: TLogProc;
   st: TDateTime;
   i: integer;
   input, output, outputRef: TArray<double>;
@@ -56,12 +57,18 @@ var
   P10: Expr;
   sqr: Expr.Func1;
 begin
+  logger :=
+    procedure(const msg: string)
+    begin
+      WriteLn(msg);
+    end;
+
   // load OpenCL platform
-  InitializeCompute;
+  InitializeCompute(PreferCPUDevice, logger, logger);
 
 
   // initialize input
-  SetLength(input, 200000000);
+  SetLength(input, 20000000);
 
   // input values are in [-1, 1]
   for i := 0 to High(input) do
@@ -280,6 +287,7 @@ const
   r0 = 1e-9;
   h = 1e-4;
 var
+  logger: TLogProc;
   sqr: Expr.Func1;
   ifthen: Expr.Func3;
   gamma, gamma_x2, get_rho: Expr.Func1;
@@ -300,8 +308,14 @@ var
 
   st, ft: double;
 begin
+  logger :=
+    procedure(const msg: string)
+    begin
+      WriteLn(msg);
+    end;
+
   // load OpenCL platform
-  InitializeCompute;
+  InitializeCompute(PreferCPUDevice, logger, logger);
 
   sqr := Func.Sqr;
   ifthen := Func.IfThen;
@@ -408,9 +422,9 @@ end;
 
 procedure RunTests;
 begin
-//  AsyncTransformTest;
+  AsyncTransformTest;
 //  AsyncTransformBufferTest;
-  ODETest;
+//  ODETest;
 end;
 
 end.

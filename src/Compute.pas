@@ -25,6 +25,10 @@ uses
 type
   Expr = Compute.ExprTrees.Expr;
 
+  TLogProc = Compute.OpenCL.TLogProc;
+
+  ComputeDeviceSelection = (PreferCPUDevice, PreferGPUDevice);
+
   Buffer<T> = record
   strict private
     FCmdQueue: Compute.OpenCL.CLCommandQueue;
@@ -83,7 +87,7 @@ function _1: Expr.LambdaParam;
 function _2: Expr.LambdaParam;
 function _3: Expr.LambdaParam;
 
-procedure InitializeCompute;
+procedure InitializeCompute(const DeviceSelection: ComputeDeviceSelection = PreferGPUDevice; const LogProc: TLogProc = nil; const DebugLogProc: TLogProc = nil);
 
 function AsyncTransform(const InputBuffer: Buffer<double>; const Expression: Expr): Future<Buffer<double>>; overload;
 // queues the async transform to execute as soon as the input buffer is ready, output buffer is returned in the future
@@ -191,9 +195,9 @@ begin
   Impl.Wait;
 end;
 
-procedure InitializeCompute;
+procedure InitializeCompute(const DeviceSelection: ComputeDeviceSelection; const LogProc, DebugLogProc: TLogProc);
 begin
-  Algorithms.Initialize;
+  Algorithms.Initialize(DeviceSelection, LogProc, DebugLogProc);
 end;
 
 { Buffer<T> }

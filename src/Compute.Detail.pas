@@ -26,7 +26,7 @@ uses
 type
   IComputeAlgorithms = interface
     ['{941C09AD-FEEC-4BFE-A9C1-C40A3C0D27C0}']
-    procedure Initialize;
+    procedure Initialize(const DeviceSelection: ComputeDeviceSelection; const LogProc, DebugLogProc: TLogProc);
 
     function Transform(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
     function Transform(const InputBuffers: array of IFuture<Buffer<double>>; const FirstElement, NumElements: UInt64; const OutputBuffer: IFuture<Buffer<double>>; const Expression: Expr): IFuture<Buffer<double>>; overload;
@@ -49,6 +49,8 @@ uses
 type
   TComputeAlgorithmsOpenCLImpl = class(TInterfacedObject, IComputeAlgorithms)
   strict private
+    FLogProc: TLogProc;
+    FDebugLogProc: TLogProc;
     FDevice: CLDevice;
     FContext: CLContext;
     FCmdQueue: CLCommandQueue;
@@ -56,12 +58,16 @@ type
     FMemWriteQueue: CLCommandQueue;
     FKernelCache: IDictionary<string, CLKernel>;
 
+    procedure Log(const Msg: string);
+    procedure DebugLog(const Msg: string); overload;
+    procedure DebugLog(const FmtMsg: string; const Args: array of const); overload;
+
     function DeviceOptimalNonInterleavedBufferSize: UInt64;
     function DeviceOptimalInterleavedBufferSize: UInt64;
 
     procedure VerifyInputBuffers<T>(const InputBuffers: array of IFuture<Buffer<T>>; const NumElements: UInt64);
 
-    procedure Initialize;
+    procedure Initialize(const DeviceSelection: ComputeDeviceSelection; const LogProc, DebugLogProc: TLogProc);
 
     function TransformPlain(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
     function TransformInterleaved(const Input, Output: TArray<double>; const Expression: Expr): IFuture<TArray<double>>; overload;
@@ -118,6 +124,23 @@ begin
   inherited Create;
 end;
 
+procedure TComputeAlgorithmsOpenCLImpl.DebugLog(const Msg: string);
+begin
+  if not Assigned(FDebugLogProc) then
+    exit;
+
+  FDebugLogProc(Msg);
+end;
+
+procedure TComputeAlgorithmsOpenCLImpl.DebugLog(const FmtMsg: string;
+  const Args: array of const);
+begin
+  if not Assigned(FDebugLogProc) then
+    exit;
+
+  FDebugLogProc(Format(FmtMsg, Args));
+end;
+
 function TComputeAlgorithmsOpenCLImpl.DeviceOptimalInterleavedBufferSize: UInt64;
 begin
   // for now some magic numbers
@@ -156,71 +179,57 @@ begin
   result := FContext;
 end;
 
-procedure TComputeAlgorithmsOpenCLImpl.Initialize;
+procedure TComputeAlgorithmsOpenCLImpl.Initialize(const DeviceSelection: ComputeDeviceSelection; const LogProc, DebugLogProc: TLogProc);
 var
-  debugLogger: TLogProc;
   platforms: CLPlatforms;
   plat: CLPlatform;
   foundDevice: boolean;
+  foundPreferredDevice: boolean;
+  devIsPreferredType: boolean;
+  selectDevice: boolean;
   dev, selectedDev: CLDevice;
 begin
-  inherited Create;
+  FLogProc := LogProc;
+  FDebugLogProc := DebugLogProc;
 
-//  debugLogger :=
-//    procedure(const Msg: string)
-//    begin
-//      OutputDebugString(PChar(Msg));
-//    end;
-  debugLogger := nil;
-
-  platforms := CLPlatforms.Create(debugLogger);
+  platforms := CLPlatforms.Create(DebugLogProc);
   plat := platforms[0];
 
   foundDevice := False;
-  if true and (Length(plat.Devices[DeviceTypeGPU]) > 0) then
-  begin
-    for dev in plat.Devices[DeviceTypeGPU] do
-    begin
-      if not (dev.SupportsFP64 and dev.IsAvailable) then
-        continue;
+  foundPreferredDevice := False;
 
-      if (not foundDevice) or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)
-        or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits) then
-      begin
-        selectedDev := dev;
-        foundDevice := True;
-      end;
+  for dev in plat.AllDevices do
+  begin
+    if not (dev.SupportsFP64 and dev.IsAvailable) then
+      continue;
+
+    case DeviceSelection of
+      PreferCPUDevice: devIsPreferredType := dev.IsType[DeviceTypeCPU];
+      PreferGPUDevice: devIsPreferredType := dev.IsType[DeviceTypeGPU];
+    else
+      devIsPreferredType := False;
     end;
-  end;
-  if (not foundDevice) and (Length(plat.Devices[DeviceTypeCPU]) > 0) then
-  begin
-    for dev in plat.Devices[DeviceTypeCPU] do
+
+    if (foundPreferredDevice and (not devIsPreferredType)) then
+      continue;
+
+    selectDevice := (not foundDevice) or ((not foundPreferredDevice) and devIsPreferredType);
+
+    // GPU - prefer memory over compute units
+    selectDevice := selectDevice
+      or ((dev.IsType[DeviceTypeGPU]) and ((dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)
+      or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits)));
+
+    // CPU - assume memory is not an issue, prefer compute units
+    selectDevice := selectDevice
+      or ((dev.IsType[DeviceTypeGPU]) and ((dev.MaxComputeUnits > selectedDev.MaxComputeUnits)
+      or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)));
+
+    if (selectDevice) then    
     begin
-      if not (dev.SupportsFP64 and dev.IsAvailable) then
-        continue;
-
-      if (not foundDevice) or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize)
-        or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits) then
-      begin
-        selectedDev := dev;
-        foundDevice := True;
-      end;
-    end;
-  end;
-
-  if (not foundDevice) then
-  begin
-    for dev in plat.AllDevices do
-    begin
-      if not (dev.SupportsFP64 and dev.IsAvailable) then
-        continue;
-
-      if (not foundDevice) or (dev.MaxComputeUnits > selectedDev.MaxComputeUnits)
-        or (dev.MaxMemAllocSize > selectedDev.MaxMemAllocSize) then
-      begin
-        selectedDev := dev;
-        foundDevice := True;
-      end;
+      selectedDev := dev;
+      foundDevice := True;
+      foundPreferredDevice := devIsPreferredType;
     end;
   end;
 
@@ -229,8 +238,7 @@ begin
 
   FDevice := selectedDev;
 
-  if IsConsole then
-    WriteLn('Selected device: ' + FDevice.Name);
+  Log('Compute device used: ' + FDevice.Name);
 
   FContext := plat.CreateContext([FDevice]);
   FCmdQueue := FContext.CreateCommandQueue(FDevice);
@@ -240,6 +248,13 @@ begin
   //FMemWriteQueue := FContext.CreateCommandQueue(FDevice);
   FMemWriteQueue := FMemReadQueue;
   FKernelCache := TDictionaryImpl<string, CLKernel>.Create;
+end;
+
+procedure TComputeAlgorithmsOpenCLImpl.Log(const Msg: string);
+begin
+  if not Assigned(FLogProc) then
+    exit;
+  FLogProc(Msg);
 end;
 
 function TComputeAlgorithmsOpenCLImpl.Transform(const Input,
@@ -288,7 +303,7 @@ begin
 
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
 
-  WriteLn(kernelSrc);
+  DebugLog(kernelSrc);
 
   prog := Context.CreateProgram(kernelSrc);
   if not prog.Build([Device]) then
@@ -383,7 +398,7 @@ begin
 
   kernelSrc := kernelGen.GenerateDoubleTransformKernel(Expression);
 
-  WriteLn(kernelSrc);
+  DebugLog(kernelSrc);
 
   prog := Context.CreateProgram(kernelSrc);
   if not prog.Build([Device]) then
@@ -499,7 +514,7 @@ begin
 
   if not FKernelCache.Contains[kernelSrc] then
   begin
-    WriteLn(kernelSrc);
+    DebugLog(kernelSrc);
 
     prog := Context.CreateProgram(kernelSrc);
     if not prog.Build([Device]) then
@@ -507,7 +522,7 @@ begin
       raise Exception.Create('Error building OpenCL kernel:' + #13#10 + prog.BuildLog);
     end;
 
-    WriteLn(prog.BuildLog);
+    DebugLog(prog.BuildLog);
 
     kernel := prog.CreateKernel('transform_double_' + IntToStr(numInputs));
     FKernelCache[kernelSrc] := kernel;
